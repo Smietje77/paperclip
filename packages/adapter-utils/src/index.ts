@@ -51,3 +51,12 @@ export {
   redactTranscriptEntryPaths,
 } from "./log-redaction.js";
 export { inferOpenAiCompatibleBiller } from "./billing.js";
+export {
+  readMcpServersFromContext,
+  writeClaudeMcpJson,
+  writeGeminiMcpJson,
+  writeCodexMcpConfigToml,
+  mergeCodexMcpServersIntoConfig,
+  mergeGeminiMcpServersIntoSettings,
+  type McpServerInput,
+} from "./mcp-config-writer.js";

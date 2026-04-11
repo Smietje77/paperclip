@@ -14,6 +14,11 @@ export interface EnvPlainBinding {
 export interface EnvSecretRefBinding {
   type: "secret_ref";
   secretId: string;
+  /**
+   * Which field of the secret to read. If omitted, the server resolves to
+   * the secret's single field (or `"value"` if multiple fields exist).
+   */
+  field?: string;
   version?: SecretVersionSelector;
 }
 
@@ -30,6 +35,11 @@ export interface CompanySecret {
   externalRef: string | null;
   latestVersion: number;
   description: string | null;
+  /**
+   * Field names stored on the latest version. Values are never exposed on
+   * list/get — only the field keys are safe to return to the client.
+   */
+  fieldNames: string[];
   createdByAgentId: string | null;
   createdByUserId: string | null;
   createdAt: Date;

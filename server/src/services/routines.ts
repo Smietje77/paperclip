@@ -490,7 +490,7 @@ export function routineService(db: Db, deps: { heartbeat?: IssueAssignmentWakeup
       {
         name: `routine-${routineId}-${crypto.randomBytes(6).toString("hex")}`,
         provider: "local_encrypted",
-        value: secretValue,
+        fields: { value: secretValue },
         description: `Webhook auth for routine ${routineId}`,
       },
       actor,
@@ -1001,7 +1001,7 @@ export function routineService(db: Db, deps: { heartbeat?: IssueAssignmentWakeup
       }
 
       const secretValue = crypto.randomBytes(24).toString("hex");
-      await secretsSvc.rotate(existing.secretId, { value: secretValue }, actor);
+      await secretsSvc.rotate(existing.secretId, { fields: { value: secretValue } }, actor);
       const [updated] = await db
         .update(routineTriggers)
         .set({

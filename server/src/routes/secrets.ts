@@ -41,12 +41,17 @@ export function secretRoutes(db: Db) {
     const companyId = req.params.companyId as string;
     assertCompanyAccess(req, companyId);
 
+    // Backward-compat: accept legacy `{value}` body and convert to `{fields: {value}}`.
+    const fields: Record<string, string> = req.body.fields
+      ? (req.body.fields as Record<string, string>)
+      : { value: req.body.value as string };
+
     const created = await svc.create(
       companyId,
       {
         name: req.body.name,
         provider: req.body.provider ?? defaultProvider,
-        value: req.body.value,
+        fields,
         description: req.body.description,
         externalRef: req.body.externalRef,
       },
@@ -60,7 +65,11 @@ export function secretRoutes(db: Db) {
       action: "secret.created",
       entityType: "secret",
       entityId: created.id,
-      details: { name: created.name, provider: created.provider },
+      details: {
+        name: created.name,
+        provider: created.provider,
+        fieldNames: created.fieldNames,
+      },
     });
 
     res.status(201).json(created);
@@ -76,10 +85,14 @@ export function secretRoutes(db: Db) {
     }
     assertCompanyAccess(req, existing.companyId);
 
+    const fields: Record<string, string> = req.body.fields
+      ? (req.body.fields as Record<string, string>)
+      : { value: req.body.value as string };
+
     const rotated = await svc.rotate(
       id,
       {
-        value: req.body.value,
+        fields,
         externalRef: req.body.externalRef,
       },
       { userId: req.actor.userId ?? "board", agentId: null },

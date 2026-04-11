@@ -3,7 +3,12 @@ import type { Dirent } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AdapterExecutionContext, AdapterExecutionResult } from "@paperclipai/adapter-utils";
+import {
+  mergeGeminiMcpServersIntoSettings,
+  readMcpServersFromContext,
+  type AdapterExecutionContext,
+  type AdapterExecutionResult,
+} from "@paperclipai/adapter-utils";
 import {
   asBoolean,
   asNumber,
@@ -164,6 +169,17 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const geminiSkillEntries = await readPaperclipRuntimeSkillEntries(config, __moduleDir);
   const desiredGeminiSkillNames = resolvePaperclipDesiredSkillNames(config, geminiSkillEntries);
   await ensureGeminiSkillsInjected(onLog, geminiSkillEntries, desiredGeminiSkillNames);
+  try {
+    await mergeGeminiMcpServersIntoSettings(
+      readMcpServersFromContext(context),
+      path.join(os.homedir(), ".gemini", "settings.json"),
+    );
+  } catch (err) {
+    await onLog(
+      "stderr",
+      `[paperclip] Failed to merge MCP servers into gemini settings.json: ${err instanceof Error ? err.message : String(err)}\n`,
+    );
+  }
 
   const envConfig = parseObject(config.env);
   const hasExplicitApiKey =

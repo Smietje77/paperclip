@@ -1,5 +1,8 @@
 export { companies } from "./companies.js";
 export { companyLogos } from "./company_logos.js";
+export { companyBrands } from "./company_brands.js";
+export { companyBrandImages } from "./company_brand_images.js";
+export { companyMcpServers } from "./company_mcp_servers.js";
 export { authUsers, authSessions, authAccounts, authVerifications } from "./auth.js";
 export { instanceSettings } from "./instance_settings.js";
 export { instanceUserRoles } from "./instance_user_roles.js";

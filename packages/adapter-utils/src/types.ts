@@ -353,4 +353,5 @@ export interface CreateConfigValues {
   maxTurnsPerRun: number;
   heartbeatEnabled: boolean;
   intervalSec: number;
+  mcpServerIds?: string[];
 }

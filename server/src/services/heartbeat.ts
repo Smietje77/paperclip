@@ -28,6 +28,7 @@ import { costService } from "./costs.js";
 import { companySkillService } from "./company-skills.js";
 import { budgetService, type BudgetEnforcementScope } from "./budgets.js";
 import { secretService } from "./secrets.js";
+import { mcpServerService } from "./mcp-servers.js";
 import { resolveDefaultAgentWorkspaceDir, resolveManagedProjectWorkspaceDir } from "../home-paths.js";
 import { summarizeHeartbeatRunResultJson } from "./heartbeat-run-summary.js";
 import {
@@ -2638,6 +2639,33 @@ export function heartbeatService(db: Db) {
           payload: meta as unknown as Record<string, unknown>,
         });
       };
+
+      const mcpServerIds = (() => {
+        const raw = (resolvedConfig as Record<string, unknown>).mcpServerIds;
+        if (!Array.isArray(raw)) return [] as string[];
+        return raw.filter((value): value is string => typeof value === "string" && value.length > 0);
+      })();
+      if (mcpServerIds.length > 0) {
+        try {
+          const resolvedMcpServers = await mcpServerService(db).resolveForAgent(
+            agent.companyId,
+            mcpServerIds,
+          );
+          if (resolvedMcpServers.length > 0) {
+            context.paperclipMcpServers = resolvedMcpServers;
+          } else {
+            delete context.paperclipMcpServers;
+          }
+        } catch (err) {
+          await onLog(
+            "stderr",
+            `[paperclip] Failed to resolve MCP servers: ${err instanceof Error ? err.message : String(err)}\n`,
+          );
+          delete context.paperclipMcpServers;
+        }
+      } else {
+        delete context.paperclipMcpServers;
+      }
 
       const adapter = getServerAdapter(agent.adapterType);
       const authToken = adapter.supportsLocalAgentJwt

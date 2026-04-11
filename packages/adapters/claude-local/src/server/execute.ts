@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AdapterExecutionContext, AdapterExecutionResult } from "@paperclipai/adapter-utils";
+import { readMcpServersFromContext, writeClaudeMcpJson } from "@paperclipai/adapter-utils";
 import type { RunProcessResult } from "@paperclipai/adapter-utils/server-utils";
 import {
   asString,
@@ -353,6 +354,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   );
   const billingType = resolveClaudeBillingType(effectiveEnv);
   const skillsDir = await buildSkillsDir(config);
+  const mcpConfigPath = await writeClaudeMcpJson(readMcpServersFromContext(context), skillsDir);
 
   // When instructionsFilePath is configured, create a combined temp file that
   // includes both the file content and the path directive, so we only need
@@ -428,6 +430,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       args.push("--append-system-prompt-file", effectiveInstructionsFilePath);
     }
     args.push("--add-dir", skillsDir);
+    if (mcpConfigPath) args.push("--mcp-config", mcpConfigPath);
     if (extraArgs.length > 0) args.push(...extraArgs);
     return args;
   };

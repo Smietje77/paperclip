@@ -14,6 +14,9 @@ const BOARD_ROUTE_ROOTS = new Set([
   "costs",
   "usage",
   "activity",
+  "secrets",
+  "brand",
+  "mcp-servers",
   "inbox",
   "design-guide",
 ]);

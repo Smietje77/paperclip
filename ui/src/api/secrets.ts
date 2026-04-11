@@ -9,13 +9,13 @@ export const secretsApi = {
     companyId: string,
     data: {
       name: string;
-      value: string;
+      fields: Record<string, string>;
       provider?: SecretProvider;
       description?: string | null;
       externalRef?: string | null;
     },
   ) => api.post<CompanySecret>(`/companies/${companyId}/secrets`, data),
-  rotate: (id: string, data: { value: string; externalRef?: string | null }) =>
+  rotate: (id: string, data: { fields: Record<string, string>; externalRef?: string | null }) =>
     api.post<CompanySecret>(`/secrets/${id}/rotate`, data),
   update: (
     id: string,

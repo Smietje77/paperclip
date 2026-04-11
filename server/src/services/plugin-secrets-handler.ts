@@ -348,7 +348,22 @@ export function createPluginSecretsHandler(
         externalRef: secret.externalRef,
       });
 
-      return resolved;
+      // Plugin secrets API returns a single plaintext string. For multi-field
+      // secrets we fall back to a sensible default field: single field when
+      // the secret only has one, or `"value"` when present. If the secret has
+      // multiple fields and no `"value"`, the plugin must migrate to
+      // per-field access (not yet exposed through the SDK); throw so callers
+      // see a clear error rather than leaking arbitrary field data.
+      const keys = Object.keys(resolved);
+      if (keys.length === 1) {
+        return resolved[keys[0]!]!;
+      }
+      if ("value" in resolved) {
+        return resolved.value!;
+      }
+      throw new Error(
+        `Secret has multiple fields [${keys.join(", ")}]; plugin must use field-aware access`,
+      );
     },
   };
 }

@@ -1,7 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { inferOpenAiCompatibleBiller, type AdapterExecutionContext, type AdapterExecutionResult } from "@paperclipai/adapter-utils";
+import {
+  inferOpenAiCompatibleBiller,
+  mergeCodexMcpServersIntoConfig,
+  readMcpServersFromContext,
+  type AdapterExecutionContext,
+  type AdapterExecutionResult,
+} from "@paperclipai/adapter-utils";
 import {
   asString,
   asNumber,
@@ -285,6 +291,17 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       desiredSkillNames,
     },
   );
+  try {
+    await mergeCodexMcpServersIntoConfig(
+      readMcpServersFromContext(context),
+      path.join(effectiveCodexHome, "config.toml"),
+    );
+  } catch (err) {
+    await onLog(
+      "stderr",
+      `[paperclip] Failed to merge MCP servers into codex config.toml: ${err instanceof Error ? err.message : String(err)}\n`,
+    );
+  }
   const hasExplicitApiKey =
     typeof envConfig.PAPERCLIP_API_KEY === "string" && envConfig.PAPERCLIP_API_KEY.trim().length > 0;
   const env: Record<string, string> = { ...buildPaperclipEnv(agent) };

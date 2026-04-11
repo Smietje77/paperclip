@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(curl -s http://localhost:3100/api/health)",
+      "Bash(curl -s http://localhost:3100/api/companies)",
+      "Bash(curl -s \"http://localhost:3100/api/companies/cd164d80-8875-4672-a2a0-e3f995a6e776/projects\")",
+      "Bash(npm --version)",
+      "Bash(node -e \"const {execFile} = require\\('child_process'\\); execFile\\('npm', ['--version'], {shell: true}, \\(err, stdout\\) => { if\\(err\\) console.log\\('ERROR:', err.message\\); else console.log\\('OK:', stdout.trim\\(\\)\\); }\\)\")",
+      "Bash(node -e \"const {execFile} = require\\('child_process'\\); execFile\\('npm', ['--version'], \\(err, stdout\\) => { if\\(err\\) console.log\\('ERROR:', err.message\\); else console.log\\('OK:', stdout.trim\\(\\)\\); }\\)\")",
+      "Bash(wmic process:*)",
+      "Bash(tasklist)",
+      "Bash(curl -s -X POST http://localhost:3100/api/plugins/install -H 'Content-Type: application/json' -d '{\"packageName\":\"@tomismeta/paperclip-aperture\"}')",
+      "Bash(taskkill //F //PID 40240 //PID 37264 //PID 29580 //PID 33564 //PID 119004)",
+      "Bash(pnpm dev:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:3100 --connect-timeout 5)",
+      "Bash(pnpm --filter @paperclipai/ui typecheck)",
+      "Bash(curl -s \"http://localhost:3100/src/components/Sidebar.tsx\")",
+      "Bash(curl -s \"http://localhost:3100/ui/src/components/Sidebar.tsx\")",
+      "Bash(pnpm --filter @paperclipai/ui build)",
+      "Bash(pnpm db:generate)",
+      "Bash(pnpm --filter @paperclipai/server typecheck)"
+    ]
+  }
+}

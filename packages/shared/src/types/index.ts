@@ -47,6 +47,12 @@ export type {
   AdapterEnvironmentTestResult,
 } from "./agent.js";
 export type { AssetImage } from "./asset.js";
+export type {
+  BrandColors,
+  BrandTypography,
+  BrandImage,
+  CompanyBrand,
+} from "./brand.js";
 export type { Project, ProjectCodebase, ProjectCodebaseOrigin, ProjectGoalRef, ProjectWorkspace } from "./project.js";
 export type {
   ExecutionWorkspace,
@@ -116,6 +122,11 @@ export type {
   CompanySecret,
   SecretProviderDescriptor,
 } from "./secrets.js";
+export type {
+  McpTransport,
+  CompanyMcpServer,
+  ResolvedMcpServer,
+} from "./mcp-server.js";
 export type {
   Routine,
   RoutineTrigger,

@@ -362,6 +362,104 @@ npx paperclipai issue update <issue-id> --assignee-agent-id <other-agent-id> --s
 
 If you use direct `curl` during these tests, include `X-Paperclip-Run-Id` on all mutating issue requests whenever running inside a heartbeat.
 
+## Brand Management
+
+Each company has a **brand profile** — colors, logos, typography, voice/tone, and markdown guidelines — stored via the Paperclip Brand API. If you're doing content work (writing, design, marketing), this is where you get the source of truth for how the company should sound and look.
+
+### Reading brand context
+
+A compact JSON blob is auto-injected into your env as `PAPERCLIP_BRAND_JSON` for every heartbeat run. Parse it for quick reads — no API call needed:
+
+```bash
+echo "$PAPERCLIP_BRAND_JSON" | jq .
+# or in Node:
+# const brand = JSON.parse(process.env.PAPERCLIP_BRAND_JSON ?? "{}")
+```
+
+The injected blob is a trimmed subset of the full profile: `brandName`, `tagline`, `colors`, `typography`, `voiceTone`, `brandGuidelines`, logo URLs, and a list of gallery image URLs with captions.
+
+For the full profile (including asset IDs and metadata), hit the REST endpoint:
+
+```bash
+curl -s "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/brand" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY"
+```
+
+### Writing brand data
+
+The brand profile is partial-update friendly — send only the fields you want to change. `PUT` with JSON:
+
+```bash
+curl -X PUT "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/brand" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brandName": "NIS2Certify",
+    "tagline": "Cybersecurity compliance, simplified.",
+    "colors": {
+      "primary": "#0066FF",
+      "secondary": "#1F2937",
+      "accent": "#10B981",
+      "background": "#FFFFFF",
+      "text": "#111827"
+    },
+    "typography": { "primary": "Inter", "secondary": "Inter" },
+    "voiceTone": "Professional, direct, reassuring. Write in active voice.",
+    "brandGuidelines": "## Positioning\nWe help mid-sized EU companies achieve NIS2 compliance...\n\n## Voice\n- Never use jargon without explanation\n- Always lead with the business outcome"
+  }'
+```
+
+**Writable fields:**
+
+| Key | Type | Notes |
+|---|---|---|
+| `brandName` | `string \| null` | Display name; may differ from company name |
+| `tagline` | `string \| null` | Short one-liner |
+| `colors` | `{primary, secondary, accent, background, text}` | Hex values like `#0066FF` |
+| `typography` | `{primary, secondary}` | Font family names |
+| `logoLightAssetId` | `uuid \| null` | Must be an asset that belongs to your company |
+| `logoDarkAssetId` | `uuid \| null` | — |
+| `iconAssetId` | `uuid \| null` | Favicon-size icon |
+| `voiceTone` | `string \| null` | Short description of tone/voice |
+| `brandGuidelines` | `string \| null` | Full markdown guidelines |
+
+Passing `null` for any field clears it. Omitting a field leaves it unchanged.
+
+### Uploading logos and gallery images (two-step flow)
+
+Images are first uploaded as company assets, then referenced by asset ID from the brand profile:
+
+```bash
+# 1) Upload the file to the company asset endpoint with a brand namespace
+ASSET=$(curl -s -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/assets/images" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -F "namespace=brand/gallery" \
+  -F "file=@./hero.png")
+ASSET_ID=$(echo "$ASSET" | jq -r '.assetId')
+
+# 2a) Attach as a logo slot:
+curl -X PUT "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/brand" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"logoLightAssetId\": \"$ASSET_ID\"}"
+
+# 2b) OR append to the gallery:
+curl -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/brand/images" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"assetId\": \"$ASSET_ID\", \"caption\": \"Homepage hero\"}"
+```
+
+Remove a gallery image with `DELETE /api/companies/:companyId/brand/images/:imageId`.
+
+### Rules & safety
+
+- **Scope:** You can only read/write the brand profile of **your own company** (`$PAPERCLIP_COMPANY_ID`). Cross-company requests fail with `403 Forbidden` — that's enforced by `assertCompanyAccess`.
+- **Side effects:** The `primary` color and `logoLightAssetId` auto-sync to `companies.brandColor` and the legacy `company_logos` slot, so the sidebar brand color and favicon update immediately.
+- **Audit trail:** `brand.updated`, `brand.image_added`, and `brand.image_removed` activity events are logged with **your agent id and run id** as the actor — they appear in the Activity page.
+- **Self-bootstrap pattern:** If the brand is empty, you can research the company (website, public docs) and `PUT` sensible defaults. Always quote your sources in `brandGuidelines` if you're inferring rather than copying verified claims.
+
 ## Full Reference
 
 For detailed API tables, JSON response schemas, worked examples (IC and Manager heartbeats), governance/approvals, cross-team delegation rules, error codes, issue lifecycle diagram, and the common mistakes table, read: `skills/paperclip/references/api-reference.md`

@@ -458,6 +458,7 @@ export const PLUGIN_CAPABILITIES = [
   "webhooks.receive",
   "http.outbound",
   "secrets.read-ref",
+  "telemetry.track",
   // Agent Tools
   "agent.tools.register",
   // UI

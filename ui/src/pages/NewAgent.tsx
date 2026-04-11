@@ -144,7 +144,11 @@ export function NewAgent() {
 
   function buildAdapterConfig() {
     const adapter = getUIAdapter(configValues.adapterType);
-    return adapter.buildAdapterConfig(configValues);
+    const base = adapter.buildAdapterConfig(configValues);
+    if (configValues.mcpServerIds && configValues.mcpServerIds.length > 0) {
+      base.mcpServerIds = configValues.mcpServerIds;
+    }
+    return base;
   }
 
   function handleSubmit() {

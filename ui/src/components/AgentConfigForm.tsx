@@ -4,12 +4,14 @@ import { AGENT_ADAPTER_TYPES } from "@paperclipai/shared";
 import type {
   Agent,
   AdapterEnvironmentTestResult,
+  CompanyMcpServer,
   CompanySecret,
   EnvBinding,
 } from "@paperclipai/shared";
 import type { AdapterModel } from "../api/agents";
 import { agentsApi } from "../api/agents";
 import { secretsApi } from "../api/secrets";
+import { mcpServersApi } from "../api/mcp-servers";
 import { assetsApi } from "../api/assets";
 import {
   DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
@@ -167,6 +169,67 @@ const claudeThinkingEffortOptions = [
 ] as const;
 
 
+/* ---- MCP server picker ---- */
+
+interface McpServerPickerProps {
+  servers: CompanyMcpServer[];
+  value: string[];
+  onChange: (ids: string[]) => void;
+}
+
+function McpServerPicker({ servers, value, onChange }: McpServerPickerProps) {
+  if (servers.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        No MCP servers configured for this company yet. Create one under Settings → MCP Servers.
+      </p>
+    );
+  }
+  const selectedSet = new Set(value);
+  return (
+    <div className="space-y-1.5">
+      {servers.map((server) => {
+        const checked = selectedSet.has(server.id);
+        return (
+          <label
+            key={server.id}
+            className="flex items-start gap-2 rounded border border-border/60 px-2 py-1.5 text-sm cursor-pointer hover:bg-muted/40"
+          >
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={checked}
+              disabled={!server.enabled}
+              onChange={(event) => {
+                const next = new Set(selectedSet);
+                if (event.target.checked) next.add(server.id);
+                else next.delete(server.id);
+                onChange(servers.filter((s) => next.has(s.id)).map((s) => s.id));
+              }}
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{server.name}</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {server.transport}
+                </span>
+                {!server.enabled ? (
+                  <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-amber-700">
+                    disabled
+                  </span>
+                ) : null}
+              </div>
+              {server.description ? (
+                <p className="text-xs text-muted-foreground">{server.description}</p>
+              ) : null}
+            </div>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ---- Form ---- */
 
 export function AgentConfigForm(props: AgentConfigFormProps) {
@@ -186,10 +249,19 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     enabled: Boolean(selectedCompanyId),
   });
 
+  const { data: availableMcpServers = [] } = useQuery({
+    queryKey: selectedCompanyId ? queryKeys.mcpServers.list(selectedCompanyId) : ["mcp-servers", "none"],
+    queryFn: () => mcpServersApi.list(selectedCompanyId!),
+    enabled: Boolean(selectedCompanyId),
+  });
+
   const createSecret = useMutation({
     mutationFn: (input: { name: string; value: string }) => {
       if (!selectedCompanyId) throw new Error("Select a company to create secrets");
-      return secretsApi.create(selectedCompanyId, input);
+      return secretsApi.create(selectedCompanyId, {
+        name: input.name,
+        fields: { value: input.value },
+      });
     },
     onSuccess: () => {
       if (!selectedCompanyId) return;
@@ -860,6 +932,29 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 />
               </Field>
 
+              <Field label="MCP servers" hint="Which MCP servers this agent should opt into. Manage the library under Settings → MCP Servers.">
+                <McpServerPicker
+                  servers={availableMcpServers}
+                  value={
+                    isCreate
+                      ? (val!.mcpServerIds ?? [])
+                      : ((() => {
+                          const raw = eff(
+                            "adapterConfig",
+                            "mcpServerIds",
+                            (Array.isArray(config.mcpServerIds) ? (config.mcpServerIds as string[]) : []),
+                          );
+                          return Array.isArray(raw) ? raw : [];
+                        })())
+                  }
+                  onChange={(ids) =>
+                    isCreate
+                      ? set!({ mcpServerIds: ids })
+                      : mark("adapterConfig", "mcpServerIds", ids)
+                  }
+                />
+              </Field>
+
               {/* Edit-only: timeout + grace period */}
               {!isCreate && (
                 <>
@@ -1099,19 +1194,26 @@ function EnvVarEditor({
     source: "plain" | "secret";
     plainValue: string;
     secretId: string;
+    /** Which field of the referenced secret to read. Empty = auto (single-field/default). */
+    field: string;
   };
+
+  function emptyRow(): Row {
+    return { key: "", source: "plain", plainValue: "", secretId: "", field: "" };
+  }
 
   function toRows(rec: Record<string, EnvBinding> | null | undefined): Row[] {
     if (!rec || typeof rec !== "object") {
-      return [{ key: "", source: "plain", plainValue: "", secretId: "" }];
+      return [emptyRow()];
     }
-    const entries = Object.entries(rec).map(([k, binding]) => {
+    const entries = Object.entries(rec).map(([k, binding]): Row => {
       if (typeof binding === "string") {
         return {
           key: k,
-          source: "plain" as const,
+          source: "plain",
           plainValue: binding,
           secretId: "",
+          field: "",
         };
       }
       if (
@@ -1120,12 +1222,13 @@ function EnvVarEditor({
         "type" in binding &&
         (binding as { type?: unknown }).type === "secret_ref"
       ) {
-        const recBinding = binding as { secretId?: unknown };
+        const recBinding = binding as { secretId?: unknown; field?: unknown };
         return {
           key: k,
-          source: "secret" as const,
+          source: "secret",
           plainValue: "",
           secretId: typeof recBinding.secretId === "string" ? recBinding.secretId : "",
+          field: typeof recBinding.field === "string" ? recBinding.field : "",
         };
       }
       if (
@@ -1137,19 +1240,15 @@ function EnvVarEditor({
         const recBinding = binding as { value?: unknown };
         return {
           key: k,
-          source: "plain" as const,
+          source: "plain",
           plainValue: typeof recBinding.value === "string" ? recBinding.value : "",
           secretId: "",
+          field: "",
         };
       }
-      return {
-        key: k,
-        source: "plain" as const,
-        plainValue: "",
-        secretId: "",
-      };
+      return emptyRow();
     });
-    return [...entries, { key: "", source: "plain", plainValue: "", secretId: "" }];
+    return [...entries, emptyRow()];
   }
 
   const [rows, setRows] = useState<Row[]>(() => toRows(value));
@@ -1179,7 +1278,12 @@ function EnvVarEditor({
       if (!k) continue;
       if (row.source === "secret") {
         if (row.secretId) {
-          rec[k] = { type: "secret_ref", secretId: row.secretId, version: "latest" };
+          rec[k] = {
+            type: "secret_ref",
+            secretId: row.secretId,
+            version: "latest",
+            ...(row.field ? { field: row.field } : {}),
+          };
         } else {
           // Row is transitioning to secret but user hasn't picked one yet.
           // Preserve the plain value so it isn't silently dropped.
@@ -1200,7 +1304,7 @@ function EnvVarEditor({
       withPatch[withPatch.length - 1].plainValue ||
       withPatch[withPatch.length - 1].secretId
     ) {
-      withPatch.push({ key: "", source: "plain", plainValue: "", secretId: "" });
+      withPatch.push(emptyRow());
     }
     setRows(withPatch);
     emit(withPatch);
@@ -1214,7 +1318,7 @@ function EnvVarEditor({
       next[next.length - 1].plainValue ||
       next[next.length - 1].secretId
     ) {
-      next.push({ key: "", source: "plain", plainValue: "", secretId: "" });
+      next.push(emptyRow());
     }
     setRows(next);
     emit(next);
@@ -1246,6 +1350,7 @@ function EnvVarEditor({
       updateRow(i, {
         source: "secret",
         secretId: created.id,
+        field: "",
       });
     } catch (err) {
       setSealError(err instanceof Error ? err.message : "Failed to create secret");
@@ -1283,18 +1388,49 @@ function EnvVarEditor({
             </select>
             {row.source === "secret" ? (
               <>
-                <select
-                  className={cn(inputClass, "flex-[3] bg-background")}
-                  value={row.secretId}
-                  onChange={(e) => updateRow(i, { secretId: e.target.value })}
-                >
-                  <option value="">Select secret...</option>
-                  {secrets.map((secret) => (
-                    <option key={secret.id} value={secret.id}>
-                      {secret.name}
-                    </option>
-                  ))}
-                </select>
+                {(() => {
+                  const selectedSecret = row.secretId
+                    ? secrets.find((s) => s.id === row.secretId)
+                    : null;
+                  const fieldNames = selectedSecret?.fieldNames ?? [];
+                  const needsFieldPicker = fieldNames.length > 1;
+                  return (
+                    <>
+                      <select
+                        className={cn(
+                          inputClass,
+                          needsFieldPicker ? "flex-[2] bg-background" : "flex-[3] bg-background",
+                        )}
+                        value={row.secretId}
+                        onChange={(e) => updateRow(i, { secretId: e.target.value, field: "" })}
+                      >
+                        <option value="">Select secret...</option>
+                        {secrets.map((secret) => (
+                          <option key={secret.id} value={secret.id}>
+                            {secret.name}
+                          </option>
+                        ))}
+                      </select>
+                      {needsFieldPicker ? (
+                        <select
+                          className={cn(inputClass, "flex-[1] bg-background")}
+                          value={row.field}
+                          onChange={(e) => updateRow(i, { field: e.target.value })}
+                          title="Which field of the secret to read"
+                        >
+                          <option value="">
+                            {fieldNames.includes("value") ? "value (default)" : "select field..."}
+                          </option>
+                          {fieldNames.map((name) => (
+                            <option key={name} value={name}>
+                              {name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+                    </>
+                  );
+                })()}
                 <button
                   type="button"
                   className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent/50 transition-colors shrink-0"

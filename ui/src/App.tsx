@@ -23,6 +23,9 @@ import { Approvals } from "./pages/Approvals";
 import { ApprovalDetail } from "./pages/ApprovalDetail";
 import { Costs } from "./pages/Costs";
 import { Activity } from "./pages/Activity";
+import { Secrets } from "./pages/Secrets";
+import { McpServers } from "./pages/McpServers";
+import { CompanyBrand } from "./pages/CompanyBrand";
 import { Inbox } from "./pages/Inbox";
 import { CompanySettings } from "./pages/CompanySettings";
 import { CompanySkills } from "./pages/CompanySkills";
@@ -167,6 +170,9 @@ function boardRoutes() {
       <Route path="approvals/:approvalId" element={<ApprovalDetail />} />
       <Route path="costs" element={<Costs />} />
       <Route path="activity" element={<Activity />} />
+      <Route path="secrets" element={<Secrets />} />
+      <Route path="mcp-servers" element={<McpServers />} />
+      <Route path="brand" element={<CompanyBrand />} />
       <Route path="inbox" element={<InboxRootRedirect />} />
       <Route path="inbox/mine" element={<Inbox />} />
       <Route path="inbox/recent" element={<Inbox />} />
@@ -327,6 +333,9 @@ export function App() {
           <Route path="issues/:issueId" element={<UnprefixedBoardRedirect />} />
           <Route path="routines" element={<UnprefixedBoardRedirect />} />
           <Route path="routines/:routineId" element={<UnprefixedBoardRedirect />} />
+          <Route path="secrets" element={<UnprefixedBoardRedirect />} />
+          <Route path="mcp-servers" element={<UnprefixedBoardRedirect />} />
+          <Route path="brand" element={<UnprefixedBoardRedirect />} />
           <Route path="skills/*" element={<UnprefixedBoardRedirect />} />
           <Route path="settings" element={<LegacySettingsRedirect />} />
           <Route path="settings/*" element={<LegacySettingsRedirect />} />

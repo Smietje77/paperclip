@@ -25,6 +25,14 @@ export {
   type UpdateCompanyBranding,
 } from "./company.js";
 export {
+  brandColorsSchema,
+  brandTypographySchema,
+  updateBrandSchema,
+  addBrandImageSchema,
+  type UpdateBrand,
+  type AddBrandImage,
+} from "./brand.js";
+export {
   companySkillSourceTypeSchema,
   companySkillTrustLevelSchema,
   companySkillCompatibilitySchema,
@@ -200,6 +208,14 @@ export {
   type RotateSecret,
   type UpdateSecret,
 } from "./secret.js";
+
+export {
+  mcpTransportSchema,
+  createMcpServerSchema,
+  updateMcpServerSchema,
+  type CreateMcpServer,
+  type UpdateMcpServer,
+} from "./mcp-server.js";
 
 export {
   createRoutineSchema,
