@@ -466,6 +466,21 @@ export const MARKETING_MCP_CATALOG: McpCatalogEntry[] = [
     isStarterPack: false,
   },
   {
+    key: "apify",
+    name: "Apify Actors",
+    description: "Web scraping en data-extractie via duizenden kant-en-klare Actors (LinkedIn, Google Maps, Instagram, etc.).",
+    category: "ops",
+    status: "stable",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@apify/actors-mcp-server"],
+    envKeys: [
+      { key: "APIFY_TOKEN", label: "Apify API token", required: true, docsUrl: "https://console.apify.com/account/integrations" },
+    ],
+    docsUrl: "https://docs.apify.com/platform/integrations/mcp",
+    isStarterPack: false,
+  },
+  {
     key: "airtable",
     name: "Airtable",
     description: "Flexibele databases voor campagne- en klant-trackers.",
