@@ -124,6 +124,10 @@ export type {
 } from "./secrets.js";
 export type {
   McpTransport,
+  McpHealthStatus,
+  McpCatalogCategory,
+  McpCatalogEnvKey,
+  McpCatalogEntry,
   CompanyMcpServer,
   ResolvedMcpServer,
 } from "./mcp-server.js";

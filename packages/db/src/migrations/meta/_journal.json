@@ -344,6 +344,20 @@
       "when": 1775917020919,
       "tag": "0048_dusty_maginty",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1776097470339,
+      "tag": "0049_rainy_thaddeus_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1776109107296,
+      "tag": "0050_grey_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,42 @@ import type { EnvBinding } from "./secrets.js";
 
 export type McpTransport = "stdio" | "http" | "sse";
 
+export type McpHealthStatus = "untested" | "healthy" | "unhealthy" | "checking";
+
+export type McpCatalogCategory =
+  | "analytics"
+  | "advertising"
+  | "social"
+  | "content"
+  | "design"
+  | "email"
+  | "seo"
+  | "crm"
+  | "ops";
+
+export interface McpCatalogEnvKey {
+  key: string;
+  label: string;
+  required: boolean;
+  docsUrl?: string;
+}
+
+export interface McpCatalogEntry {
+  key: string;
+  name: string;
+  description: string;
+  category: McpCatalogCategory;
+  status: "stable" | "experimental";
+  transport: McpTransport;
+  command?: string;
+  args?: string[];
+  url?: string;
+  envKeys: McpCatalogEnvKey[];
+  headerKeys?: McpCatalogEnvKey[];
+  docsUrl: string;
+  isStarterPack: boolean;
+}
+
 /**
  * Company-level MCP server definition. Credential-bearing values inside
  * `env` and `headers` use the shared `EnvBinding` union so they can be
@@ -19,6 +55,10 @@ export interface CompanyMcpServer {
   headers: Record<string, EnvBinding> | null;
   env: Record<string, EnvBinding> | null;
   enabled: boolean;
+  catalogKey: string | null;
+  healthStatus: McpHealthStatus;
+  lastHealthCheckAt: Date | null;
+  lastHealthError: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

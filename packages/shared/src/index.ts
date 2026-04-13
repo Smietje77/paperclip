@@ -298,6 +298,10 @@ export type {
   CompanySecret,
   SecretProviderDescriptor,
   McpTransport,
+  McpHealthStatus,
+  McpCatalogCategory,
+  McpCatalogEnvKey,
+  McpCatalogEntry,
   CompanyMcpServer,
   ResolvedMcpServer,
   Routine,
@@ -574,6 +578,12 @@ export {
   type SetPluginState,
   type ListPluginState,
 } from "./validators/index.js";
+
+export {
+  MARKETING_MCP_CATALOG,
+  getCatalogEntry,
+  getStarterPackEntries,
+} from "./mcp-catalog.js";
 
 export { API_PREFIX, API } from "./api.js";
 export { normalizeAgentUrlKey, deriveAgentUrlKey, isUuidLike } from "./agent-url-key.js";

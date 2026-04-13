@@ -37,6 +37,7 @@ import { logger } from "./middleware/logger.js";
 import { DEFAULT_LOCAL_PLUGIN_DIR, pluginLoader } from "./services/plugin-loader.js";
 import { createPluginWorkerManager } from "./services/plugin-worker-manager.js";
 import { createPluginJobScheduler } from "./services/plugin-job-scheduler.js";
+import { createMcpHealthScheduler } from "./services/mcp-health-scheduler.js";
 import { pluginJobStore } from "./services/plugin-job-store.js";
 import { createPluginToolDispatcher } from "./services/plugin-tool-dispatcher.js";
 import { pluginLifecycleManager } from "./services/plugin-lifecycle.js";
@@ -292,6 +293,8 @@ export async function createApp(
 
   jobCoordinator.start();
   scheduler.start();
+  const mcpHealthScheduler = createMcpHealthScheduler(db, logger);
+  mcpHealthScheduler.start();
   void toolDispatcher.initialize().catch((err) => {
     logger.error({ err }, "Failed to initialize plugin tool dispatcher");
   });
@@ -313,6 +316,7 @@ export async function createApp(
   });
   process.once("exit", () => {
     devWatcher?.close();
+    mcpHealthScheduler.stop();
     hostServiceCleanup.disposeAll();
     hostServiceCleanup.teardown();
   });

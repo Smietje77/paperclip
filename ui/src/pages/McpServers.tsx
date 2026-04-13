@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Activity,
+  ChevronDown,
+  Check,
   MoreHorizontal,
+  Package,
   Plug,
   Plus,
   Trash2,
@@ -11,6 +15,8 @@ import type {
   CompanySecret,
   CreateMcpServer,
   EnvBinding,
+  McpCatalogCategory,
+  McpCatalogEntry,
   McpTransport,
 } from "@paperclipai/shared";
 import { mcpServersApi } from "../api/mcp-servers";
@@ -48,6 +54,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 type BindingKind = "plain" | "secret_ref";
 
@@ -465,6 +476,213 @@ function ServerFormDialog(props: ServerFormDialogProps) {
   );
 }
 
+function StatusDot({ server }: { server: CompanyMcpServer }) {
+  let color: string;
+  let label: string;
+  if (!server.enabled) {
+    color = "bg-muted-foreground/40";
+    label = "Disabled";
+  } else if (server.healthStatus === "healthy") {
+    color = "bg-green-500";
+    label = "Healthy";
+  } else if (server.healthStatus === "unhealthy") {
+    color = "bg-red-500";
+    label = "Unhealthy";
+  } else if (server.healthStatus === "checking") {
+    color = "bg-blue-500 animate-pulse";
+    label = "Checking…";
+  } else {
+    color = "bg-amber-400";
+    label = "Untested";
+  }
+  const tooltipParts = [label];
+  if (server.lastHealthError) tooltipParts.push(server.lastHealthError);
+  if (server.lastHealthCheckAt) {
+    const checkedAt = new Date(server.lastHealthCheckAt);
+    tooltipParts.push(`Checked: ${checkedAt.toLocaleString()}`);
+  }
+  return (
+    <span
+      className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${color}`}
+      title={tooltipParts.join(" — ")}
+      aria-label={label}
+    />
+  );
+}
+
+const CATEGORY_LABELS: Record<McpCatalogCategory, string> = {
+  analytics: "Analytics",
+  advertising: "Advertising",
+  social: "Social",
+  content: "Content",
+  design: "Design",
+  email: "Email",
+  seo: "SEO",
+  crm: "CRM",
+  ops: "Operations",
+};
+
+const CATEGORY_ORDER: McpCatalogCategory[] = [
+  "analytics",
+  "advertising",
+  "social",
+  "content",
+  "design",
+  "email",
+  "seo",
+  "crm",
+  "ops",
+];
+
+interface McpCatalogSectionProps {
+  catalog: McpCatalogEntry[];
+  installedKeys: Set<string>;
+  onInstall: (catalogKey: string) => void;
+  onInstallStarter: () => void;
+  installingKey: string | null;
+  isStarterPending: boolean;
+}
+
+function McpCatalogSection({
+  catalog,
+  installedKeys,
+  onInstall,
+  onInstallStarter,
+  installingKey,
+  isStarterPending,
+}: McpCatalogSectionProps) {
+  const [open, setOpen] = useState(false);
+
+  const grouped = useMemo(() => {
+    const map = new Map<McpCatalogCategory, McpCatalogEntry[]>();
+    for (const entry of catalog) {
+      const list = map.get(entry.category) ?? [];
+      list.push(entry);
+      map.set(entry.category, list);
+    }
+    return map;
+  }, [catalog]);
+
+  const starterCount = catalog.filter((c) => c.isStarterPack).length;
+  const installedStarterCount = catalog.filter((c) => c.isStarterPack && installedKeys.has(c.key)).length;
+  const starterFullyInstalled = starterCount > 0 && installedStarterCount >= starterCount;
+
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              <span className="font-medium">Marketing MCP Catalog</span>
+              <Badge variant="outline" className="text-xs">
+                {catalog.length} servers
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Preconfigured marketing MCPs. Install an entry to create a disabled server row; add
+              your API secrets and then enable it.
+            </p>
+          </div>
+          <Button
+            onClick={onInstallStarter}
+            disabled={isStarterPending || starterFullyInstalled}
+          >
+            {starterFullyInstalled
+              ? "Starter pack installed"
+              : isStarterPending
+                ? "Installing…"
+                : `Install Starter Pack (${starterCount})`}
+          </Button>
+        </div>
+
+        <Collapsible open={open} onOpenChange={setOpen} className="mt-4">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2">
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+              />
+              {open ? "Hide catalog" : "Browse full catalog"}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3 space-y-4">
+            {CATEGORY_ORDER.map((category) => {
+              const entries = grouped.get(category);
+              if (!entries || entries.length === 0) return null;
+              return (
+                <div key={category} className="space-y-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
+                    {CATEGORY_LABELS[category]}
+                  </h3>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {entries.map((entry) => {
+                      const installed = installedKeys.has(entry.key);
+                      const installing = installingKey === entry.key;
+                      return (
+                        <div
+                          key={entry.key}
+                          className="flex items-start justify-between gap-3 rounded-md border p-3"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-medium text-sm">{entry.name}</span>
+                              {entry.isStarterPack ? (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  starter
+                                </Badge>
+                              ) : null}
+                              {entry.status === "experimental" ? (
+                                <Badge variant="outline" className="text-[10px]">
+                                  experimental
+                                </Badge>
+                              ) : null}
+                              <Badge variant="outline" className="text-[10px]">
+                                {entry.transport}
+                              </Badge>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                              {entry.description}
+                            </p>
+                            <a
+                              href={entry.docsUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1 inline-block text-[11px] text-primary underline"
+                            >
+                              docs
+                            </a>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={installed ? "outline" : "default"}
+                            disabled={installed || installing}
+                            onClick={() => onInstall(entry.key)}
+                          >
+                            {installed ? (
+                              <>
+                                <Check className="mr-1 h-3 w-3" />
+                                Installed
+                              </>
+                            ) : installing ? (
+                              "Installing…"
+                            ) : (
+                              "Install"
+                            )}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </CollapsibleContent>
+        </Collapsible>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function McpServers() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -499,6 +717,80 @@ export function McpServers() {
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.list(selectedCompanyId!) });
+
+  const { data: catalog } = useQuery({
+    queryKey: queryKeys.mcpServers.catalog,
+    queryFn: () => mcpServersApi.listCatalog(),
+  });
+
+  const installedCatalogKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const server of servers ?? []) {
+      if (server.catalogKey) set.add(server.catalogKey);
+    }
+    return set;
+  }, [servers]);
+
+  const installCatalogMutation = useMutation({
+    mutationFn: (catalogKey: string) =>
+      mcpServersApi.installFromCatalog(selectedCompanyId!, catalogKey),
+    onSuccess: (created) => {
+      pushToast({ title: `Installed ${created.name}`, body: "Set your secrets and enable it.", tone: "success" });
+      void invalidate();
+    },
+    onError: (err: unknown) => {
+      pushToast({
+        title: "Install failed",
+        body: err instanceof Error ? err.message : String(err),
+        tone: "error",
+      });
+    },
+  });
+
+  const testConnectionMutation = useMutation({
+    mutationFn: (id: string) => mcpServersApi.testConnection(id),
+    onSuccess: (result, id) => {
+      if (result.status === "healthy") {
+        pushToast({ title: "Connection healthy", tone: "success" });
+      } else {
+        pushToast({
+          title: "Connection failed",
+          body: result.error ?? "Unknown error",
+          tone: "error",
+        });
+      }
+      void invalidate();
+      void id;
+    },
+    onError: (err: unknown) => {
+      pushToast({
+        title: "Test failed",
+        body: err instanceof Error ? err.message : String(err),
+        tone: "error",
+      });
+    },
+  });
+
+  const starterPackMutation = useMutation({
+    mutationFn: () => mcpServersApi.installStarterPack(selectedCompanyId!),
+    onSuccess: (result) => {
+      const installedCount = result.installed.length;
+      const skippedCount = result.skipped.length;
+      pushToast({
+        title: `Starter pack installed: ${installedCount} added`,
+        body: skippedCount > 0 ? `${skippedCount} already present, skipped.` : "Configure their secrets to enable.",
+        tone: "success",
+      });
+      void invalidate();
+    },
+    onError: (err: unknown) => {
+      pushToast({
+        title: "Starter pack install failed",
+        body: err instanceof Error ? err.message : String(err),
+        tone: "error",
+      });
+    },
+  });
 
   const createMutation = useMutation({
     mutationFn: () => {
@@ -588,6 +880,17 @@ export function McpServers() {
         </Button>
       </div>
 
+      {catalog && catalog.length > 0 ? (
+        <McpCatalogSection
+          catalog={catalog}
+          installedKeys={installedCatalogKeys}
+          onInstall={(key) => installCatalogMutation.mutate(key)}
+          onInstallStarter={() => starterPackMutation.mutate()}
+          installingKey={installCatalogMutation.isPending ? installCatalogMutation.variables ?? null : null}
+          isStarterPending={starterPackMutation.isPending}
+        />
+      ) : null}
+
       {sortedServers.length === 0 ? (
         <EmptyState
           icon={Plug}
@@ -606,6 +909,7 @@ export function McpServers() {
               <CardContent className="flex items-start justify-between gap-4 p-4">
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
+                    <StatusDot server={server} />
                     <span className="font-medium">{server.name}</span>
                     <Badge variant="outline">{server.transport}</Badge>
                     {server.enabled ? (
@@ -613,6 +917,12 @@ export function McpServers() {
                     ) : (
                       <Badge variant="outline">disabled</Badge>
                     )}
+                    {server.catalogKey ? (
+                      <Badge variant="outline" className="text-xs">
+                        <Package className="mr-1 h-3 w-3" />
+                        catalog
+                      </Badge>
+                    ) : null}
                   </div>
                   {server.description ? (
                     <p className="text-sm text-muted-foreground">{server.description}</p>
@@ -630,6 +940,13 @@ export function McpServers() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      disabled={testConnectionMutation.isPending}
+                      onClick={() => testConnectionMutation.mutate(server.id)}
+                    >
+                      <Activity className="mr-2 h-4 w-4" />
+                      Test connection
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         setEditTarget(server);

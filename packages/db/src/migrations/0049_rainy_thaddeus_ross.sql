@@ -1,0 +1,1 @@
+ALTER TABLE "company_mcp_servers" ADD COLUMN "catalog_key" text;
