@@ -76,7 +76,10 @@ export const DEFAULT_LOCAL_PLUGIN_DIR = path.join(
   "plugins",
 );
 
-const DEV_TSX_LOADER_PATH = path.resolve(__dirname, "../../../cli/node_modules/tsx/dist/loader.mjs");
+const DEV_TSX_LOADER_FS_PATH = path.resolve(__dirname, "../../../cli/node_modules/tsx/dist/loader.mjs");
+// On Windows, --import requires a file:// URL rather than a raw path; Node's ESM
+// loader otherwise reports "Received protocol 'c:'" and refuses to start the worker.
+const DEV_TSX_LOADER_PATH = pathToFileURL(DEV_TSX_LOADER_FS_PATH).href;
 
 // ---------------------------------------------------------------------------
 // Discovery result types
@@ -1740,7 +1743,7 @@ export function pluginLoader(
       // Repo-local plugin installs can resolve workspace TS sources at runtime
       // (for example @paperclipai/shared exports). Run those workers through
       // the tsx loader so first-party example plugins work in development.
-      if (plugin.packagePath && existsSync(DEV_TSX_LOADER_PATH)) {
+      if (plugin.packagePath && existsSync(DEV_TSX_LOADER_FS_PATH)) {
         workerOptions.execArgv = ["--import", DEV_TSX_LOADER_PATH];
       }
 

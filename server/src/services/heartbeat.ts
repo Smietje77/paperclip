@@ -19,6 +19,7 @@ import {
 import { conflict, notFound } from "../errors.js";
 import { logger } from "../middleware/logger.js";
 import { publishLiveEvent } from "./live-events.js";
+import { logActivity } from "./activity-log.js";
 import { getRunLogStore, type RunLogHandle } from "./run-log-store.js";
 import { getServerAdapter, runningProcesses } from "../adapters/index.js";
 import type { AdapterExecutionResult, AdapterInvocationMeta, AdapterSessionCodec, UsageSummary } from "../adapters/index.js";
@@ -879,6 +880,25 @@ function resolveNextSessionState(input: {
   };
 }
 
+/**
+ * Map an internal heartbeat run status to the corresponding plugin domain
+ * event type. Only terminal transitions are mapped — non-terminal statuses
+ * (queued, running) return null so no plugin event is emitted.
+ */
+export function mapRunStatusToPluginEvent(status: string): "agent.run.finished" | "agent.run.failed" | "agent.run.cancelled" | null {
+  switch (status) {
+    case "success":
+      return "agent.run.finished";
+    case "failed":
+    case "error":
+      return "agent.run.failed";
+    case "cancelled":
+      return "agent.run.cancelled";
+    default:
+      return null;
+  }
+}
+
 export function heartbeatService(db: Db) {
   const instanceSettings = instanceSettingsService(db);
   const getCurrentUserRedactionOptions = async () => ({
@@ -1505,6 +1525,38 @@ export function heartbeatService(db: Db) {
           finishedAt: updated.finishedAt ? new Date(updated.finishedAt).toISOString() : null,
         },
       });
+
+      const pluginEventAction = mapRunStatusToPluginEvent(updated.status);
+      if (pluginEventAction) {
+        const startedAtMs = updated.startedAt ? new Date(updated.startedAt).getTime() : null;
+        const finishedAtMs = updated.finishedAt ? new Date(updated.finishedAt).getTime() : null;
+        const durationMs =
+          startedAtMs !== null && finishedAtMs !== null ? finishedAtMs - startedAtMs : null;
+        void logActivity(db, {
+          companyId: updated.companyId,
+          actorType: "system",
+          actorId: "heartbeat-scheduler",
+          action: pluginEventAction,
+          entityType: "heartbeat_run",
+          entityId: updated.id,
+          agentId: updated.agentId,
+          runId: updated.id,
+          details: {
+            status: updated.status,
+            invocationSource: updated.invocationSource,
+            triggerDetail: updated.triggerDetail,
+            error: updated.error ?? null,
+            errorCode: updated.errorCode ?? null,
+            exitCode: updated.exitCode ?? null,
+            processLossRetryCount: updated.processLossRetryCount,
+            startedAt: updated.startedAt ? new Date(updated.startedAt).toISOString() : null,
+            finishedAt: updated.finishedAt ? new Date(updated.finishedAt).toISOString() : null,
+            durationMs,
+          },
+        }).catch((err: unknown) => {
+          logger.warn({ err, runId: updated.id, status: updated.status }, "failed to log run status plugin event");
+        });
+      }
     }
 
     return updated;
