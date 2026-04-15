@@ -50,3 +50,6 @@ tests/release-smoke/test-results/
 tests/release-smoke/playwright-report/
 .superset/
 .claude/worktrees/
+
+# Local MCP service-account credentials — never commit
+MCP/*.json

@@ -281,7 +281,8 @@ export function mcpServerService(db: Db) {
       url: entry.url,
       env: buildPlaceholderEnv(entry.envKeys) ?? undefined,
       headers: buildPlaceholderEnv(entry.headerKeys) ?? undefined,
-      enabled: false,
+      // Legacy flag — effective availability is now driven by healthStatus.
+      enabled: true,
     };
   }
 
@@ -343,11 +344,8 @@ export function mcpServerService(db: Db) {
     }
   }
 
-  async function listEnabled(): Promise<CompanyMcpServer[]> {
-    const rows = await db
-      .select()
-      .from(companyMcpServers)
-      .where(eq(companyMcpServers.enabled, true));
+  async function listAll(): Promise<CompanyMcpServer[]> {
+    const rows = await db.select().from(companyMcpServers);
     return rows.map(rowToModel);
   }
 
@@ -438,7 +436,8 @@ export function mcpServerService(db: Db) {
       .where(
         and(
           eq(companyMcpServers.companyId, companyId),
-          eq(companyMcpServers.enabled, true),
+          // Gate: only healthy servers are handed to adapters.
+          eq(companyMcpServers.healthStatus, "healthy"),
           inArray(companyMcpServers.id, mcpServerIds),
         ),
       );
@@ -475,7 +474,7 @@ export function mcpServerService(db: Db) {
     installFromCatalog,
     installStarterPack,
     testConnection,
-    listEnabled,
+    listAll,
     resolveForAgent,
   };
 }

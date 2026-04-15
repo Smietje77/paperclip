@@ -30,7 +30,7 @@ export function createMcpHealthScheduler(
     if (running) return;
     running = true;
     try {
-      const servers = await svc.listEnabled();
+      const servers = await svc.listAll();
       if (servers.length === 0) return;
 
       // Simple worker-pool with CONCURRENCY slots.

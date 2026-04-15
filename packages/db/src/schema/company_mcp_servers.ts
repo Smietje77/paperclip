@@ -23,6 +23,8 @@ export const companyMcpServers = pgTable(
     url: text("url"),
     headers: jsonb("headers").$type<Record<string, unknown> | null>(),
     env: jsonb("env").$type<Record<string, unknown> | null>(),
+    // DEPRECATED: legacy admin flag; effective availability is now driven by `healthStatus`.
+    // Kept for back-compat; always `true` for new rows. Remove in a future cleanup migration.
     enabled: boolean("enabled").notNull().default(true),
     catalogKey: text("catalog_key"),
     healthStatus: text("health_status").notNull().default("untested"),

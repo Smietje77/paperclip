@@ -448,17 +448,10 @@ function ServerFormDialog(props: ServerFormDialogProps) {
             </>
           )}
 
-          <div className="flex items-center gap-2">
-            <input
-              id="mcp-enabled"
-              type="checkbox"
-              checked={form.enabled}
-              onChange={(event) => setForm({ ...form, enabled: event.target.checked })}
-            />
-            <label htmlFor="mcp-enabled" className="text-sm">
-              Enabled (available for agents to opt into)
-            </label>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Availability is determined automatically by health checks. A server becomes active
+            for agents as soon as its connection is healthy.
+          </p>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
@@ -476,25 +469,22 @@ function ServerFormDialog(props: ServerFormDialogProps) {
   );
 }
 
-function StatusDot({ server }: { server: CompanyMcpServer }) {
-  let color: string;
-  let label: string;
-  if (!server.enabled) {
-    color = "bg-muted-foreground/40";
-    label = "Disabled";
-  } else if (server.healthStatus === "healthy") {
-    color = "bg-green-500";
-    label = "Healthy";
-  } else if (server.healthStatus === "unhealthy") {
-    color = "bg-red-500";
-    label = "Unhealthy";
-  } else if (server.healthStatus === "checking") {
-    color = "bg-blue-500 animate-pulse";
-    label = "Checking…";
-  } else {
-    color = "bg-amber-400";
-    label = "Untested";
+function statusPresentation(server: CompanyMcpServer): { color: string; label: string } {
+  switch (server.healthStatus) {
+    case "healthy":
+      return { color: "bg-green-500", label: "Healthy" };
+    case "unhealthy":
+      return { color: "bg-red-500", label: "Unhealthy" };
+    case "checking":
+      return { color: "bg-blue-500 animate-pulse", label: "Checking…" };
+    case "untested":
+    default:
+      return { color: "bg-amber-400", label: "Untested" };
   }
+}
+
+function StatusDot({ server }: { server: CompanyMcpServer }) {
+  const { color, label } = statusPresentation(server);
   const tooltipParts = [label];
   if (server.lastHealthError) tooltipParts.push(server.lastHealthError);
   if (server.lastHealthCheckAt) {
@@ -508,6 +498,11 @@ function StatusDot({ server }: { server: CompanyMcpServer }) {
       aria-label={label}
     />
   );
+}
+
+function StatusLabel({ server }: { server: CompanyMcpServer }) {
+  const { label } = statusPresentation(server);
+  return <span className="text-xs text-muted-foreground">{label}</span>;
 }
 
 const CATEGORY_LABELS: Record<McpCatalogCategory, string> = {
@@ -911,12 +906,8 @@ export function McpServers() {
                   <div className="flex items-center gap-2">
                     <StatusDot server={server} />
                     <span className="font-medium">{server.name}</span>
+                    <StatusLabel server={server} />
                     <Badge variant="outline">{server.transport}</Badge>
-                    {server.enabled ? (
-                      <Badge variant="secondary">enabled</Badge>
-                    ) : (
-                      <Badge variant="outline">disabled</Badge>
-                    )}
                     {server.catalogKey ? (
                       <Badge variant="outline" className="text-xs">
                         <Package className="mr-1 h-3 w-3" />

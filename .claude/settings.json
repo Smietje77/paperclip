@@ -19,7 +19,26 @@
       "Bash(curl -s \"http://localhost:3100/ui/src/components/Sidebar.tsx\")",
       "Bash(pnpm --filter @paperclipai/ui build)",
       "Bash(pnpm db:generate)",
-      "Bash(pnpm --filter @paperclipai/server typecheck)"
+      "Bash(pnpm --filter @paperclipai/server typecheck)",
+      "Bash(grep -r \"agentId\" /c/Users/bjorn/Projects/paperclip/packages/db/src/schema/*.ts)",
+      "Bash(grep -l \"assigneeAgentId\" /c/Users/bjorn/Projects/paperclip/server/src/services/*.ts)",
+      "Bash(pnpm -F @paperclipai/server typecheck)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)",
+      "Bash(pnpm -F @paperclipai/shared typecheck)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(curl -s -L \"https://registry.modelcontextprotocol.io/v0/servers?limit=200\" -o /tmp/mcp-registry.json)",
+      "Read(//tmp/**)",
+      "Bash(curl -s \"https://registry.modelcontextprotocol.io/v0/servers?limit=100\")",
+      "Bash(curl -s \"https://registry.modelcontextprotocol.io/v0/servers?limit=100&cursor=$\\(cat /tmp/mcp1.json)",
+      "Bash(curl -sL -A \"Mozilla/5.0\" https://mcpmarket.com/server/resend-3 -o /tmp/resend3.html)",
+      "Bash(python3 -c \"import re,html; t=open\\('/tmp/resend3.html'\\).read\\(\\); t=re.sub\\(r'<script.*?</script>','',t,flags=re.S\\); t=re.sub\\(r'<style.*?</style>','',t,flags=re.S\\); t=re.sub\\(r'<[^>]+>',' ',t\\); t=re.sub\\(r'\\\\s+',' ',t\\); print\\(html.unescape\\(t\\)[:5000]\\)\")",
+      "WebFetch(domain:mcpmarket.com)",
+      "Bash(curl -s http://localhost:3001/api/health)",
+      "Bash(curl -s http://localhost:4000/api/health)",
+      "Bash(netstat -ano)",
+      "Bash(netstat -ano -p tcp)"
     ]
   }
 }
