@@ -13,6 +13,8 @@ export { approvalService } from "./approvals.js";
 export { budgetService } from "./budgets.js";
 export { secretService } from "./secrets.js";
 export { brandService } from "./brands.js";
+export { companyAdapterSettingsService, registerAdapterSettingsScaffold } from "./company-adapter-settings.js";
+export { scaffoldCompany, registerCompanyScaffoldStep } from "./company-scaffold.js";
 export { mcpServerService } from "./mcp-servers.js";
 export { routineService } from "./routines.js";
 export { costService } from "./costs.js";

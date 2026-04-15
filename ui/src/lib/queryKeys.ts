@@ -109,6 +109,12 @@ export const queryKeys = {
     list: (companyId: string) => ["mcp-servers", companyId] as const,
     catalog: ["mcp-catalog"] as const,
   },
+  companyAdapterSettings: {
+    list: (companyId: string) => ["company-adapter-settings", companyId] as const,
+    detail: (companyId: string, type: string) =>
+      ["company-adapter-settings", companyId, type] as const,
+    instanceUsage: ["instance-adapter-usage"] as const,
+  },
   dashboard: (companyId: string) => ["dashboard", companyId] as const,
   sidebarBadges: (companyId: string) => ["sidebar-badges", companyId] as const,
   activity: (companyId: string) => ["activity", companyId] as const,

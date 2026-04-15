@@ -27,6 +27,8 @@ import { Secrets } from "./pages/Secrets";
 import { McpServers } from "./pages/McpServers";
 import { CompanyBrand } from "./pages/CompanyBrand";
 import { Inbox } from "./pages/Inbox";
+import { CompanyAdapters } from "./pages/CompanyAdapters";
+import { CompanyAgents } from "./pages/CompanyAgents";
 import { CompanySettings } from "./pages/CompanySettings";
 import { CompanySkills } from "./pages/CompanySkills";
 import { CompanyExport } from "./pages/CompanyExport";
@@ -126,6 +128,8 @@ function boardRoutes() {
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="onboarding" element={<OnboardingRoutePage />} />
       <Route path="companies" element={<Companies />} />
+      <Route path="company/agents" element={<CompanyAgents />} />
+      <Route path="company/adapters" element={<CompanyAdapters />} />
       <Route path="company/settings" element={<CompanySettings />} />
       <Route path="company/export/*" element={<CompanyExport />} />
       <Route path="company/import" element={<CompanyImport />} />

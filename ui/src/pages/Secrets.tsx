@@ -70,7 +70,7 @@ interface Preset {
 const PRESETS: Record<string, Preset> = {
   simple: {
     label: "Simple (single value)",
-    description: "One secret value — API keys, tokens, passwords",
+    description: "One secret value — API keys, tokens, passwords. Field name 'value' is fine for a single key.",
     fields: ["value"],
   },
   login: {
@@ -184,11 +184,18 @@ function FieldRepeater({ rows, onRowsChange, allowRename = true }: FieldRepeater
 
   return (
     <div className="space-y-2">
+      {rows.length > 0 && allowRename && (
+        <div className="flex items-center gap-2 px-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+          <div className="flex-[2]">Field name</div>
+          <div className="flex-[3]">Field value (paste API key, password…)</div>
+          <div className="w-8 shrink-0" />
+        </div>
+      )}
       {rows.map((row, index) => (
         <div key={row.id} className="flex items-start gap-2">
           <Input
-            className="flex-[2]"
-            placeholder="field name"
+            className="flex-[2] font-mono"
+            placeholder="e.g. apiKey"
             value={row.name}
             onChange={(event) => updateRow(index, { name: event.target.value })}
             disabled={!allowRename}
@@ -197,7 +204,7 @@ function FieldRepeater({ rows, onRowsChange, allowRename = true }: FieldRepeater
           <div className="relative flex-[3]">
             <Input
               type={row.show ? "text" : "password"}
-              placeholder="value"
+              placeholder="paste the secret value here"
               value={row.value}
               onChange={(event) => updateRow(index, { value: event.target.value })}
               className="pr-10"
@@ -580,6 +587,17 @@ export function Secrets() {
               or define your own fields. Values are encrypted and never shown again after saving.
             </DialogDescription>
           </DialogHeader>
+          <div className="rounded border border-blue-500/30 bg-blue-500/5 p-2 text-xs space-y-1">
+            <div className="font-medium text-blue-700 dark:text-blue-400">
+              Heb je echt een secret nodig?
+            </div>
+            <p className="text-muted-foreground">
+              <strong>Geen secret nodig</strong> voor adapters die via CLI-login werken: <span className="font-mono">claude</span> (Claude Code), <span className="font-mono">codex</span>, <span className="font-mono">gemini</span>, <span className="font-mono">cursor</span>. Log in via de CLI op de host (<span className="font-mono">claude login</span>, etc.) en je bent klaar.
+            </p>
+            <p className="text-muted-foreground">
+              <strong>Wel een secret nodig</strong> voor: OpenCode (OpenAI/OpenRouter/Kie.ai), Hermes, OpenClaw Gateway, Pi, MCP-servers (GitHub PAT, Apify, DataForSEO, Resend, …) en eigen integraties.
+            </p>
+          </div>
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label

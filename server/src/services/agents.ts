@@ -2,15 +2,26 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, desc, eq, gte, inArray, lt, ne, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import {
+  activityLog,
   agents,
   agentConfigRevisions,
   agentApiKeys,
   agentRuntimeState,
   agentTaskSessions,
   agentWakeupRequests,
+  approvals,
+  approvalComments,
+  assets,
   costEvents,
+  financeEvents,
+  goals,
   heartbeatRunEvents,
   heartbeatRuns,
+  issues,
+  issueComments,
+  joinRequests,
+  projects,
+  routines,
 } from "@paperclipai/db";
 import { isUuidLike, normalizeAgentUrlKey } from "@paperclipai/shared";
 import { conflict, notFound, unprocessable } from "../errors.js";
@@ -472,8 +483,31 @@ export function agentService(db: Db) {
       const existing = await getById(id);
       if (!existing) return null;
 
+      const assignedRoutines = await db
+        .select({ id: routines.id })
+        .from(routines)
+        .where(eq(routines.assigneeAgentId, id))
+        .limit(1);
+      if (assignedRoutines.length > 0) {
+        throw conflict(
+          "Agent has routines assigned as assignee. Reassign or delete those routines before deleting this agent.",
+        );
+      }
+
       return db.transaction(async (tx) => {
         await tx.update(agents).set({ reportsTo: null }).where(eq(agents.reportsTo, id));
+        await tx.update(activityLog).set({ agentId: null }).where(eq(activityLog.agentId, id));
+        await tx.update(approvals).set({ requestedByAgentId: null }).where(eq(approvals.requestedByAgentId, id));
+        await tx.update(approvalComments).set({ authorAgentId: null }).where(eq(approvalComments.authorAgentId, id));
+        await tx.update(assets).set({ createdByAgentId: null }).where(eq(assets.createdByAgentId, id));
+        await tx.update(financeEvents).set({ agentId: null }).where(eq(financeEvents.agentId, id));
+        await tx.update(goals).set({ ownerAgentId: null }).where(eq(goals.ownerAgentId, id));
+        await tx.update(issues).set({ assigneeAgentId: null }).where(eq(issues.assigneeAgentId, id));
+        await tx.update(issues).set({ createdByAgentId: null }).where(eq(issues.createdByAgentId, id));
+        await tx.update(issueComments).set({ authorAgentId: null }).where(eq(issueComments.authorAgentId, id));
+        await tx.update(joinRequests).set({ createdAgentId: null }).where(eq(joinRequests.createdAgentId, id));
+        await tx.update(projects).set({ leadAgentId: null }).where(eq(projects.leadAgentId, id));
+        await tx.delete(costEvents).where(eq(costEvents.agentId, id));
         await tx.delete(heartbeatRunEvents).where(eq(heartbeatRunEvents.agentId, id));
         await tx.delete(agentTaskSessions).where(eq(agentTaskSessions.agentId, id));
         await tx.delete(heartbeatRuns).where(eq(heartbeatRuns.agentId, id));

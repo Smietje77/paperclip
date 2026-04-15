@@ -39,6 +39,15 @@ vi.mock("../services/index.js", () => ({
   budgetService: () => mockBudgetService,
   companyPortabilityService: () => mockCompanyPortabilityService,
   companyService: () => mockCompanyService,
+  companyAdapterSettingsService: () => ({
+    list: vi.fn().mockResolvedValue([]),
+    get: vi.fn(),
+    upsert: vi.fn(),
+    test: vi.fn(),
+    reset: vi.fn(),
+    seedForCompany: vi.fn(),
+    instanceUsage: vi.fn().mockResolvedValue([]),
+  }),
   logActivity: mockLogActivity,
 }));
 

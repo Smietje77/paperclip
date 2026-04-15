@@ -29,6 +29,15 @@ vi.mock("../services/index.js", () => ({
   agentService: () => ({
     getById: vi.fn(),
   }),
+  companyAdapterSettingsService: () => ({
+    list: vi.fn().mockResolvedValue([]),
+    get: vi.fn(),
+    upsert: vi.fn(),
+    test: vi.fn(),
+    reset: vi.fn(),
+    seedForCompany: vi.fn(),
+    instanceUsage: vi.fn().mockResolvedValue([]),
+  }),
   logActivity: vi.fn(),
 }));
 

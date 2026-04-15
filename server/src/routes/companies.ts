@@ -14,6 +14,7 @@ import {
   accessService,
   agentService,
   budgetService,
+  companyAdapterSettingsService,
   companyPortabilityService,
   companyService,
   logActivity,
@@ -28,6 +29,7 @@ export function companyRoutes(db: Db, storage?: StorageService) {
   const portability = companyPortabilityService(db, storage);
   const access = accessService(db);
   const budgets = budgetService(db);
+  const adapterSettings = companyAdapterSettingsService(db);
 
   function assertImportTargetAccess(
     req: Request,
@@ -311,6 +313,62 @@ export function companyRoutes(db: Db, storage?: StorageService) {
       details: req.body,
     });
     res.json(company);
+  });
+
+  router.get("/:companyId/adapter-settings", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    assertCompanyAccess(req, companyId);
+    const settings = await adapterSettings.list(companyId);
+    res.json(settings);
+  });
+
+  router.get("/:companyId/adapter-settings/:type", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    const type = req.params.type as string;
+    assertCompanyAccess(req, companyId);
+    const setting = await adapterSettings.get(companyId, type);
+    res.json(setting);
+  });
+
+  router.patch("/:companyId/adapter-settings/:type", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    const type = req.params.type as string;
+    assertCompanyAccess(req, companyId);
+    const body = (req.body ?? {}) as {
+      enabled?: boolean;
+      defaultModel?: string | null;
+      defaultAdapterConfig?: Record<string, unknown>;
+    };
+    const setting = await adapterSettings.upsert(companyId, type, body);
+    const actor = getActorInfo(req);
+    await logActivity(db, {
+      companyId,
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      agentId: actor.agentId,
+      runId: actor.runId,
+      action: "company.adapter_settings_updated",
+      entityType: "company",
+      entityId: companyId,
+      details: { adapterType: type, patch: body },
+    });
+    res.json(setting);
+  });
+
+  router.post("/:companyId/adapter-settings/:type/test", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    const type = req.params.type as string;
+    assertCompanyAccess(req, companyId);
+    const setting = await adapterSettings.test(companyId, type);
+    res.json(setting);
+  });
+
+  router.delete("/:companyId/adapter-settings/:type", async (req, res) => {
+    const companyId = req.params.companyId as string;
+    const type = req.params.type as string;
+    assertCompanyAccess(req, companyId);
+    const setting = await adapterSettings.reset(companyId, type);
+    res.json(setting);
   });
 
   router.post("/:companyId/archive", async (req, res) => {

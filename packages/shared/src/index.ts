@@ -245,6 +245,10 @@ export type {
   CostByAgentModel,
   CostWindowSpendRow,
   CostByProject,
+  AdapterUsage,
+  AdapterTestStatus,
+  CompanyAdapterSetting,
+  InstanceAdapterUsage,
   FinanceEvent,
   FinanceSummary,
   FinanceByBiller,
@@ -586,6 +590,7 @@ export {
 } from "./mcp-catalog.js";
 
 export { API_PREFIX, API } from "./api.js";
+export { PROVIDER_TO_ADAPTER_TYPES, providerToAdapterTypes } from "./adapter-providers.js";
 export { normalizeAgentUrlKey, deriveAgentUrlKey, isUuidLike } from "./agent-url-key.js";
 export { deriveProjectUrlKey, normalizeProjectUrlKey, hasNonAsciiContent } from "./project-url-key.js";
 export {

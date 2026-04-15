@@ -3,7 +3,7 @@ import type { Db } from "@paperclipai/db";
 import { patchInstanceExperimentalSettingsSchema, patchInstanceGeneralSettingsSchema } from "@paperclipai/shared";
 import { forbidden } from "../errors.js";
 import { validate } from "../middleware/validate.js";
-import { instanceSettingsService, logActivity } from "../services/index.js";
+import { companyAdapterSettingsService, instanceSettingsService, logActivity } from "../services/index.js";
 import { getActorInfo } from "./authz.js";
 
 function assertCanManageInstanceSettings(req: Request) {
@@ -19,6 +19,12 @@ function assertCanManageInstanceSettings(req: Request) {
 export function instanceSettingsRoutes(db: Db) {
   const router = Router();
   const svc = instanceSettingsService(db);
+  const adapterSettings = companyAdapterSettingsService(db);
+
+  router.get("/instance/adapter-usage", async (req, res) => {
+    assertCanManageInstanceSettings(req);
+    res.json(await adapterSettings.instanceUsage());
+  });
 
   router.get("/instance/settings/general", async (req, res) => {
     assertCanManageInstanceSettings(req);
