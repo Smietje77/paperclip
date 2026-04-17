@@ -15,7 +15,6 @@ import {
   Bot,
   Code,
   Gem,
-  MousePointer2,
   Sparkles,
   Terminal,
 } from "lucide-react";
@@ -29,7 +28,6 @@ type AdvancedAdapterType =
   | "gemini_local"
   | "opencode_local"
   | "pi_local"
-  | "cursor"
   | "openclaw_gateway"
   | "hermes_local";
 
@@ -49,9 +47,9 @@ const ADVANCED_ADAPTER_OPTIONS: Array<{
   },
   {
     value: "codex_local",
-    label: "Codex",
+    label: "OpenAI",
     icon: Code,
-    desc: "Local Codex agent",
+    desc: "OpenAI models via Codex CLI",
     recommended: true,
   },
   {
@@ -77,12 +75,6 @@ const ADVANCED_ADAPTER_OPTIONS: Array<{
     label: "Pi",
     icon: Terminal,
     desc: "Local Pi agent",
-  },
-  {
-    value: "cursor",
-    label: "Cursor",
-    icon: MousePointer2,
-    desc: "Local Cursor agent",
   },
   {
     value: "openclaw_gateway",

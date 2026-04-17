@@ -16,11 +16,10 @@ interface AgentPropertiesProps {
 
 const adapterLabels: Record<string, string> = {
   claude_local: "Claude (local)",
-  codex_local: "Codex (local)",
+  codex_local: "OpenAI (local)",
   gemini_local: "Gemini CLI (local)",
   opencode_local: "OpenCode (local)",
   openclaw_gateway: "OpenClaw Gateway",
-  cursor: "Cursor (local)",
   process: "Process",
   http: "HTTP",
 };

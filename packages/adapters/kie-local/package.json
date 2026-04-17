@@ -1,5 +1,5 @@
 {
-  "name": "@paperclipai/adapter-cursor-local",
+  "name": "@paperclipai/adapter-kie-local",
   "version": "0.3.1",
   "license": "MIT",
   "homepage": "https://github.com/paperclipai/paperclip",
@@ -9,7 +9,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/paperclipai/paperclip",
-    "directory": "packages/adapters/cursor-local"
+    "directory": "packages/adapters/kie-local"
   },
   "type": "module",
   "exports": {
@@ -41,18 +41,15 @@
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts"
   },
-  "files": [
-    "dist",
-    "skills"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@paperclipai/adapter-utils": "workspace:*",
-    "picocolors": "^1.1.1"
+    "@paperclipai/adapter-opencode-local": "workspace:*",
+    "@paperclipai/adapter-utils": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.6.0",

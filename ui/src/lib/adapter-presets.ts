@@ -15,33 +15,55 @@ export interface AdapterAuthInfo {
   loginCommand?: string;
   description: string;
   apiKeyEnvVar?: string;
+  apiKeyLabel?: string;
+  credentialsPath?: string;
 }
 
 export const ADAPTER_AUTH: Record<string, AdapterAuthInfo> = {
   claude_local: {
     mode: "cli_login",
     loginCommand: "claude login",
-    description: "Logt in via je Claude Code (Anthropic) account. Geen secret nodig.",
+    apiKeyEnvVar: "ANTHROPIC_API_KEY",
+    credentialsPath: "~/.claude/.credentials.json",
+    description:
+      "Standaard via Claude Code subscription (CLI-login). Optioneel: koppel een ANTHROPIC_API_KEY secret om in plaats daarvan API-credits te gebruiken.",
   },
   codex_local: {
     mode: "cli_login",
     loginCommand: "codex login",
-    description: "Logt in via je ChatGPT/OpenAI account (Codex CLI). Geen secret nodig.",
+    apiKeyEnvVar: "OPENAI_API_KEY",
+    credentialsPath: "~/.codex/auth.json",
+    description:
+      "Standaard via ChatGPT-login (vereist ChatGPT Plus/Team/Enterprise voor gpt-5/Codex-modellen). Voor API-billing: run in terminal `echo \"sk-...\" | codex login --with-api-key` — dit vervangt de ChatGPT-token door een OpenAI API-key in `~/.codex/auth.json`. Koppel je secret hieronder alleen als paperclip de key ook via env moet kunnen doorgeven.",
   },
   gemini_local: {
     mode: "cli_login",
     loginCommand: "gemini auth login",
-    description: "Logt in via je Google-account (Gemini CLI). Geen secret nodig.",
-  },
-  cursor: {
-    mode: "cli_login",
-    description: "Auth via Cursor desktop app. Geen secret nodig.",
+    apiKeyEnvVar: "GEMINI_API_KEY",
+    credentialsPath: "~/.gemini/",
+    description:
+      "Standaard via Google-account (Gemini CLI subscription). Optioneel: koppel een GEMINI_API_KEY of GOOGLE_API_KEY secret voor pay-per-use API.",
   },
   opencode_local: {
     mode: "api_key",
     apiKeyEnvVar: "OPENAI_API_KEY",
+    apiKeyLabel: "OpenAI API key",
     description:
-      "OpenAI-compatible HTTP. Vereist een API-key secret. Met preset koppel je OpenAI, OpenRouter of Kie.ai.",
+      "OpenAI-compatible HTTP via OpenCode CLI. Vereist een OpenAI API-key secret. Voor OpenRouter of Kie.ai: gebruik de losse adapter-tegels.",
+  },
+  openrouter_local: {
+    mode: "api_key",
+    apiKeyEnvVar: "OPENAI_API_KEY",
+    apiKeyLabel: "OpenRouter API key",
+    description:
+      "Multi-provider routing via OpenRouter (Anthropic, OpenAI, Google, Meta, Mistral, …). Vereist een OpenRouter API-key secret, gekoppeld aan OPENAI_API_KEY (OpenCode CLI leest deze).",
+  },
+  kie_local: {
+    mode: "api_key",
+    apiKeyEnvVar: "OPENAI_API_KEY",
+    apiKeyLabel: "Kie.ai API key",
+    description:
+      "OpenAI-compatible gateway via Kie.ai. Vereist een Kie.ai API-key secret, gekoppeld aan OPENAI_API_KEY.",
   },
   hermes_local: {
     mode: "api_key",
@@ -109,49 +131,13 @@ export interface AdapterProviderPreset {
   sampleModels: string[];
 }
 
-export const OPENCODE_PRESETS: AdapterProviderPreset[] = [
-  {
-    id: "openai",
-    label: "OpenAI (default)",
-    baseUrl: null,
-    defaultModel: "openai/gpt-4o",
-    apiKeyEnvVar: "OPENAI_API_KEY",
-    docsUrl: "https://platform.openai.com/docs",
-    hint: "Standaard OpenAI endpoint. Maak een secret OPENAI_API_KEY.",
-    sampleModels: ["openai/gpt-4o", "openai/gpt-4o-mini", "openai/gpt-4-turbo"],
-  },
-  {
-    id: "openrouter",
-    label: "OpenRouter",
-    baseUrl: "https://openrouter.ai/api/v1",
-    defaultModel: "openai/gpt-4o-mini",
-    apiKeyEnvVar: "OPENAI_API_KEY",
-    docsUrl: "https://openrouter.ai/docs",
-    hint:
-      "OpenRouter routes naar Anthropic, Mistral, Llama enz. Maak een secret met je OpenRouter-key en bind die aan OPENAI_API_KEY.",
-    sampleModels: [
-      "openai/gpt-4o-mini",
-      "anthropic/claude-3.5-sonnet",
-      "google/gemini-pro-1.5",
-      "meta-llama/llama-3.1-70b-instruct",
-    ],
-  },
-  {
-    id: "kie_ai",
-    label: "Kie.ai",
-    baseUrl: "https://api.kie.ai/v1",
-    defaultModel: "openai/gpt-4o-mini",
-    apiKeyEnvVar: "OPENAI_API_KEY",
-    docsUrl: "https://kie.ai/docs",
-    hint:
-      "Kie.ai biedt OpenAI-compatible toegang tot meerdere modellen. Bind je Kie.ai key aan OPENAI_API_KEY.",
-    sampleModels: ["openai/gpt-4o", "openai/gpt-4o-mini", "anthropic/claude-3.5-sonnet"],
-  },
-];
+/**
+ * @deprecated OpenCode provider presets were removed in favour of standalone
+ * `openrouter_local` and `kie_local` adapters. OpenCode is now OpenAI-only.
+ */
+export const OPENCODE_PRESETS: AdapterProviderPreset[] = [];
 
-export const PRESETS_BY_ADAPTER: Record<string, AdapterProviderPreset[]> = {
-  opencode_local: OPENCODE_PRESETS,
-};
+export const PRESETS_BY_ADAPTER: Record<string, AdapterProviderPreset[]> = {};
 
 export function presetsForAdapter(adapterType: string): AdapterProviderPreset[] {
   return PRESETS_BY_ADAPTER[adapterType] ?? [];

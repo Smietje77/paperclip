@@ -2,10 +2,11 @@ import type { Agent, CostByAgent } from "@paperclipai/shared";
 
 export const adapterLabels: Record<string, string> = {
   claude_local: "Claude",
-  codex_local: "Codex",
+  codex_local: "OpenAI",
   gemini_local: "Gemini",
   opencode_local: "OpenCode",
-  cursor: "Cursor",
+  openrouter_local: "OpenRouter",
+  kie_local: "Kie.ai",
   hermes_local: "Hermes",
   openclaw_gateway: "OpenClaw Gateway",
   pi_local: "Pi",

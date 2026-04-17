@@ -148,7 +148,7 @@ function AdapterRow({
   const secretsQuery = useQuery({
     queryKey: queryKeys.secrets.list(companyId),
     queryFn: () => secretsApi.list(companyId),
-    enabled: expanded && auth.mode === "api_key",
+    enabled: expanded && Boolean(apiKeyEnv),
     staleTime: 30_000,
   });
 
@@ -237,7 +237,7 @@ function AdapterRow({
                 className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded"
                 title={auth.description}
               >
-                CLI-login
+                {auth.apiKeyEnvVar ? "CLI-login of API-key" : "CLI-login"}
               </span>
             )}
             {auth.mode === "api_key" && (
@@ -349,7 +349,7 @@ function AdapterRow({
           {auth.mode === "cli_login" && (
             <div className="border border-blue-500/30 bg-blue-500/5 p-2 space-y-1">
               <div className="text-xs font-medium text-blue-700 dark:text-blue-400">
-                Authenticatie via CLI-login
+                Authenticatie via CLI-login (aanbevolen)
               </div>
               <p className="text-[11px] text-muted-foreground">{auth.description}</p>
               {auth.loginCommand && (
@@ -358,14 +358,24 @@ function AdapterRow({
                   in een terminal op de host. Klik daarna "Test connection" hieronder.
                 </p>
               )}
+              {auth.credentialsPath && (
+                <p className="text-[11px] text-muted-foreground">
+                  Credentials worden opgeslagen in:{" "}
+                  <span className="font-mono bg-muted px-1 py-0.5 rounded">{auth.credentialsPath}</span>{" "}
+                  op de host (Paperclip leest dit niet, het is alleen voor de CLI).
+                </p>
+              )}
             </div>
           )}
 
-          {auth.mode === "api_key" && apiKeyEnv && (
+          {apiKeyEnv && (
             <div className="border border-border bg-background p-2 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-xs font-medium">
-                  API-key secret <span className="text-muted-foreground font-mono">→ {apiKeyEnv}</span>
+                  {auth.mode === "cli_login"
+                    ? "Optioneel: API-key override"
+                    : auth.apiKeyLabel ?? "API-key secret"}{" "}
+                  <span className="text-muted-foreground font-mono">→ {apiKeyEnv}</span>
                 </div>
                 <Link to="/secrets" className="text-[11px] text-muted-foreground underline">
                   beheer secrets

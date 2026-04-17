@@ -1,10 +1,11 @@
 import type { UIAdapterModule } from "./types";
 import { claudeLocalUIAdapter } from "./claude-local";
 import { codexLocalUIAdapter } from "./codex-local";
-import { cursorLocalUIAdapter } from "./cursor";
 import { geminiLocalUIAdapter } from "./gemini-local";
 import { hermesLocalUIAdapter } from "./hermes-local";
+import { kieLocalUIAdapter } from "./kie-local";
 import { openCodeLocalUIAdapter } from "./opencode-local";
+import { openRouterLocalUIAdapter } from "./openrouter-local";
 import { piLocalUIAdapter } from "./pi-local";
 import { openClawGatewayUIAdapter } from "./openclaw-gateway";
 import { processUIAdapter } from "./process";
@@ -16,8 +17,9 @@ const uiAdapters: UIAdapterModule[] = [
   geminiLocalUIAdapter,
   hermesLocalUIAdapter,
   openCodeLocalUIAdapter,
+  openRouterLocalUIAdapter,
+  kieLocalUIAdapter,
   piLocalUIAdapter,
-  cursorLocalUIAdapter,
   openClawGatewayUIAdapter,
   processUIAdapter,
   httpUIAdapter,

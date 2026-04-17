@@ -25,16 +25,18 @@ import {
   DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
   DEFAULT_CODEX_LOCAL_MODEL,
 } from "@paperclipai/adapter-codex-local";
-import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
 import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
+import { DEFAULT_OPENROUTER_LOCAL_MODEL } from "@paperclipai/adapter-openrouter-local";
+import { DEFAULT_KIE_LOCAL_MODEL } from "@paperclipai/adapter-kie-local";
 
 const SUPPORTED_ADVANCED_ADAPTER_TYPES = new Set<CreateConfigValues["adapterType"]>([
   "claude_local",
   "codex_local",
   "gemini_local",
   "opencode_local",
+  "openrouter_local",
+  "kie_local",
   "pi_local",
-  "cursor",
   "hermes_local",
   "openclaw_gateway",
 ]);
@@ -50,10 +52,12 @@ function createValuesForAdapterType(
       DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX;
   } else if (adapterType === "gemini_local") {
     nextValues.model = DEFAULT_GEMINI_LOCAL_MODEL;
-  } else if (adapterType === "cursor") {
-    nextValues.model = DEFAULT_CURSOR_LOCAL_MODEL;
   } else if (adapterType === "opencode_local") {
     nextValues.model = "";
+  } else if (adapterType === "openrouter_local") {
+    nextValues.model = DEFAULT_OPENROUTER_LOCAL_MODEL;
+  } else if (adapterType === "kie_local") {
+    nextValues.model = DEFAULT_KIE_LOCAL_MODEL;
   }
   return nextValues;
 }

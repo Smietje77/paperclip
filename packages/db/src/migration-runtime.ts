@@ -92,9 +92,19 @@ async function ensureEmbeddedPostgresConnection(
   preferredPort: number,
 ): Promise<MigrationConnection> {
   const EmbeddedPostgres = await loadEmbeddedPostgresCtor();
-  const selectedPort = await findAvailablePort(preferredPort);
   const postmasterPidFile = path.resolve(dataDir, "postmaster.pid");
   const pgVersionFile = path.resolve(dataDir, "PG_VERSION");
+  // On Windows, PID recycling makes process.kill(pid, 0) unreliable —
+  // the pidfile can look valid while no postgres is actually listening.
+  // If the pidfile's port isn't bound, treat the pidfile as stale.
+  const pidFilePort = readPidFilePort(postmasterPidFile);
+  if (existsSync(postmasterPidFile) && pidFilePort != null) {
+    const bound = await isPortInUse(pidFilePort);
+    if (!bound) {
+      rmSync(postmasterPidFile, { force: true });
+    }
+  }
+  const selectedPort = await findAvailablePort(preferredPort);
   const runningPid = readRunningPostmasterPid(postmasterPidFile);
   const runningPort = readPidFilePort(postmasterPidFile);
   const preferredAdminConnectionString = `postgres://paperclip:paperclip@127.0.0.1:${preferredPort}/postgres`;

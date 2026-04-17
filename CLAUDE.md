@@ -43,7 +43,7 @@ pnpm paperclipai doctor   # Diagnose setup issues
 - **`packages/shared`** (`@paperclipai/shared`) - Shared types, Zod schemas, constants. No runtime deps except zod.
 - **`packages/db`** (`@paperclipai/db`) - Drizzle ORM schema (~50 tables), migrations, embedded-postgres client.
 - **`packages/adapter-utils`** (`@paperclipai/adapter-utils`) - Core adapter interfaces (`ServerAdapterModule`, `AdapterExecutionContext`, `AdapterExecutionResult`).
-- **`packages/adapters/*`** - One package per AI agent (claude-local, codex-local, cursor-local, gemini-local, openclaw-gateway, opencode-local, pi-local). Each implements `ServerAdapterModule`.
+- **`packages/adapters/*`** - One package per AI agent (claude-local, codex-local, gemini-local, openclaw-gateway, opencode-local, pi-local). Each implements `ServerAdapterModule`.
 - **`packages/plugins/sdk`** (`@paperclipai/plugin-sdk`) - Plugin system API (`definePlugin`, event bus, job scheduler, state store, UI bridge).
 - **`server`** (`@paperclipai/server`) - Express 5 API server. Routes, services, WebSocket realtime, heartbeat scheduler, plugin worker manager.
 - **`ui`** (`@paperclipai/ui`) - React 19 SPA with Vite, Tailwind CSS v4, React Router v7, TanStack Query v5, Radix UI.
@@ -80,3 +80,38 @@ Do NOT commit `pnpm-lock.yaml` in pull requests. CI owns lockfile updates. The `
 ## PR Guidelines
 
 Include a "thinking path" in PR descriptions that explains from the top of the project down to what was changed (see CONTRIBUTING.md for examples).
+
+
+---
+
+## Karpathy Coding Principles
+
+> Behavioral guidelines to reduce common LLM coding mistakes, derived from Andrej Karpathy's observations on LLM pitfalls.
+> Tradeoff: These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+### 1. Think Before Coding
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+- State assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+**Minimum code that solves the problem. Nothing speculative.**
+- No features beyond what was asked. No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- If you write 200 lines and it could be 50, rewrite it.
+- Ask: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+**Touch only what you must. Clean up only your own mess.**
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken. Match existing style.
+- If you notice unrelated dead code, mention it — don't delete it.
+- Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+**Define success criteria. Loop until verified.**
+- Transform tasks into verifiable goals with concrete checks.
+- For multi-step tasks, state a brief plan: `[Step] → verify: [check]`
+- Strong success criteria let you loop independently. Weak criteria require constant clarification.

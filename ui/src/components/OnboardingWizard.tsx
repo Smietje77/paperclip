@@ -34,7 +34,6 @@ import {
   DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
   DEFAULT_CODEX_LOCAL_MODEL
 } from "@paperclipai/adapter-codex-local";
-import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
 import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
 import { resolveRouteOnboardingOptions } from "../lib/onboarding-route";
 import { AsciiArtAnimation } from "./AsciiArtAnimation";
@@ -50,7 +49,6 @@ import {
   ArrowRight,
   Terminal,
   Sparkles,
-  MousePointer2,
   Check,
   Loader2,
   ChevronDown,
@@ -66,7 +64,6 @@ type AdapterType =
   | "hermes_local"
   | "opencode_local"
   | "pi_local"
-  | "cursor"
   | "http"
   | "openclaw_gateway";
 
@@ -212,8 +209,7 @@ export function OnboardingWizard() {
     adapterType === "gemini_local" ||
     adapterType === "hermes_local" ||
     adapterType === "opencode_local" ||
-    adapterType === "pi_local" ||
-    adapterType === "cursor";
+    adapterType === "pi_local";
   const effectiveAdapterCommand =
     command.trim() ||
     (adapterType === "codex_local"
@@ -224,8 +220,6 @@ export function OnboardingWizard() {
         ? "hermes"
       : adapterType === "pi_local"
       ? "pi"
-      : adapterType === "cursor"
-      ? "agent"
       : adapterType === "opencode_local"
       ? "opencode"
       : "claude");
@@ -324,8 +318,6 @@ export function OnboardingWizard() {
           ? model || DEFAULT_CODEX_LOCAL_MODEL
           : adapterType === "gemini_local"
             ? model || DEFAULT_GEMINI_LOCAL_MODEL
-          : adapterType === "cursor"
-          ? model || DEFAULT_CURSOR_LOCAL_MODEL
           : model,
       command,
       args,
@@ -769,9 +761,9 @@ export function OnboardingWizard() {
                         },
                         {
                           value: "codex_local" as const,
-                          label: "Codex",
+                          label: "OpenAI",
                           icon: Code,
-                          desc: "Local Codex agent",
+                          desc: "OpenAI models via Codex CLI",
                           recommended: true
                         }
                       ].map((opt) => (
@@ -843,12 +835,6 @@ export function OnboardingWizard() {
                             desc: "Local Pi agent"
                           },
                           {
-                            value: "cursor" as const,
-                            label: "Cursor",
-                            icon: MousePointer2,
-                            desc: "Local Cursor agent"
-                          },
-                          {
                             value: "hermes_local" as const,
                             label: "Hermes Agent",
                             icon: HermesIcon,
@@ -882,10 +868,6 @@ export function OnboardingWizard() {
                                 setModel(DEFAULT_GEMINI_LOCAL_MODEL);
                                 return;
                               }
-                              if (nextType === "cursor" && !model) {
-                                setModel(DEFAULT_CURSOR_LOCAL_MODEL);
-                                return;
-                              }
                               if (nextType === "opencode_local") {
                                 if (!model.includes("/")) {
                                   setModel("");
@@ -915,8 +897,7 @@ export function OnboardingWizard() {
                     adapterType === "gemini_local" ||
                     adapterType === "hermes_local" ||
                     adapterType === "opencode_local" ||
-                    adapterType === "pi_local" ||
-                    adapterType === "cursor") && (
+                    adapterType === "pi_local") && (
                     <div className="space-y-3">
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
@@ -1085,9 +1066,7 @@ export function OnboardingWizard() {
                         <div className="rounded-md border border-border/70 bg-muted/20 px-2.5 py-2 text-[11px] space-y-1.5">
                           <p className="font-medium">Manual debug</p>
                           <p className="text-muted-foreground font-mono break-all">
-                            {adapterType === "cursor"
-                              ? `${effectiveAdapterCommand} -p --mode ask --output-format json \"Respond with hello.\"`
-                              : adapterType === "codex_local"
+                            {adapterType === "codex_local"
                               ? `${effectiveAdapterCommand} exec --json -`
                               : adapterType === "gemini_local"
                                 ? `${effectiveAdapterCommand} --output-format json "Respond with hello."`
@@ -1099,28 +1078,23 @@ export function OnboardingWizard() {
                             Prompt:{" "}
                             <span className="font-mono">Respond with hello.</span>
                           </p>
-                          {adapterType === "cursor" ||
-                          adapterType === "codex_local" ||
+                          {adapterType === "codex_local" ||
                           adapterType === "gemini_local" ||
                           adapterType === "opencode_local" ? (
                             <p className="text-muted-foreground">
                               If auth fails, set{" "}
                               <span className="font-mono">
-                                {adapterType === "cursor"
-                                  ? "CURSOR_API_KEY"
-                                  : adapterType === "gemini_local"
-                                    ? "GEMINI_API_KEY"
-                                    : "OPENAI_API_KEY"}
+                                {adapterType === "gemini_local"
+                                  ? "GEMINI_API_KEY"
+                                  : "OPENAI_API_KEY"}
                               </span>{" "}
                               in env or run{" "}
                               <span className="font-mono">
-                                {adapterType === "cursor"
-                                  ? "agent login"
-                                  : adapterType === "codex_local"
-                                    ? "codex login"
-                                    : adapterType === "gemini_local"
-                                      ? "gemini auth"
-                                      : "opencode auth login"}
+                                {adapterType === "codex_local"
+                                  ? "codex login"
+                                  : adapterType === "gemini_local"
+                                    ? "gemini auth"
+                                    : "opencode auth login"}
                               </span>
                               .
                             </p>

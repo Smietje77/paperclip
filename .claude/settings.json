@@ -70,7 +70,21 @@
       "Bash(pnpm vitest:*)",
       "Bash(xargs grep:*)",
       "Bash(curl -s \"http://127.0.0.1:3100/api/companies/cd164d80-8875-4672-a2a0-e3f995a6e776/secrets\")",
-      "Bash(grep -n \"Each secret can hold one\\\\|Create secret$\\\\|CreateSecret\\\\|<DialogHeader\\\\|<DialogTitle\" ui/src/pages/Secrets.tsx)"
+      "Bash(grep -n \"Each secret can hold one\\\\|Create secret$\\\\|CreateSecret\\\\|<DialogHeader\\\\|<DialogTitle\" ui/src/pages/Secrets.tsx)",
+      "Bash(find /c/Users/bjorn/Projects/paperclip/server/src -name \"*.ts\" -exec grep -l \"detectAdapterModel\" {} \\\\;)",
+      "Bash(find /c/Users/bjorn/Projects/paperclip -path \"*/gemini-local/src\" -prune -o -type f -name \"*.ts\" -exec grep -l \"\\\\.gemini.*auth\\\\|google_application_credentials\" {} \\\\;)",
+      "Bash(pnpm --filter @paperclipai/ui --filter @paperclipai/adapter-gemini-local typecheck)",
+      "Bash(pnpm --filter @paperclipai/adapter-gemini-local typecheck)",
+      "Bash(pnpm --filter @paperclipai/adapter-openrouter-local --filter @paperclipai/adapter-kie-local typecheck)",
+      "Bash(pnpm --filter @paperclipai/shared --filter @paperclipai/server typecheck)",
+      "Bash(pnpm --filter @paperclipai/ui --filter paperclipai typecheck)",
+      "Bash(tasklist //FI \"PID eq 13528\")",
+      "Read(//c/Users/bjorn/.paperclip/instances/default/db/**)",
+      "Bash(tasklist //FI \"PID eq 96440\")",
+      "Bash(tasklist //FI \"IMAGENAME eq postgres.exe\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\bjorn\\.paperclip\\instances\\default\\db"
     ]
   }
 }

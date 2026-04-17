@@ -19,14 +19,6 @@ import {
 } from "@paperclipai/adapter-codex-local/server";
 import { agentConfigurationDoc as codexAgentConfigurationDoc, models as codexModels } from "@paperclipai/adapter-codex-local";
 import {
-  execute as cursorExecute,
-  listCursorSkills,
-  syncCursorSkills,
-  testEnvironment as cursorTestEnvironment,
-  sessionCodec as cursorSessionCodec,
-} from "@paperclipai/adapter-cursor-local/server";
-import { agentConfigurationDoc as cursorAgentConfigurationDoc, models as cursorModels } from "@paperclipai/adapter-cursor-local";
-import {
   execute as geminiExecute,
   listGeminiSkills,
   syncGeminiSkills,
@@ -47,6 +39,30 @@ import {
   models as openCodeModels,
 } from "@paperclipai/adapter-opencode-local";
 import {
+  execute as openRouterExecute,
+  testEnvironment as openRouterTestEnvironment,
+  listSkills as listOpenRouterSkills,
+  syncSkills as syncOpenRouterSkills,
+  sessionCodec as openRouterSessionCodec,
+  listModels as listOpenRouterModels,
+} from "@paperclipai/adapter-openrouter-local/server";
+import {
+  agentConfigurationDoc as openRouterAgentConfigurationDoc,
+  models as openRouterModels,
+} from "@paperclipai/adapter-openrouter-local";
+import {
+  execute as kieExecute,
+  testEnvironment as kieTestEnvironment,
+  listSkills as listKieSkills,
+  syncSkills as syncKieSkills,
+  sessionCodec as kieSessionCodec,
+  listModels as listKieModels,
+} from "@paperclipai/adapter-kie-local/server";
+import {
+  agentConfigurationDoc as kieAgentConfigurationDoc,
+  models as kieModels,
+} from "@paperclipai/adapter-kie-local";
+import {
   execute as openclawGatewayExecute,
   testEnvironment as openclawGatewayTestEnvironment,
 } from "@paperclipai/adapter-openclaw-gateway/server";
@@ -55,7 +71,6 @@ import {
   models as openclawGatewayModels,
 } from "@paperclipai/adapter-openclaw-gateway";
 import { listCodexModels } from "./codex-models.js";
-import { listCursorModels } from "./cursor-models.js";
 import {
   execute as piExecute,
   listPiSkills,
@@ -111,20 +126,6 @@ const codexLocalAdapter: ServerAdapterModule = {
   getQuotaWindows: codexGetQuotaWindows,
 };
 
-const cursorLocalAdapter: ServerAdapterModule = {
-  type: "cursor",
-  execute: cursorExecute,
-  testEnvironment: cursorTestEnvironment,
-  listSkills: listCursorSkills,
-  syncSkills: syncCursorSkills,
-  sessionCodec: cursorSessionCodec,
-  sessionManagement: getAdapterSessionManagement("cursor") ?? undefined,
-  models: cursorModels,
-  listModels: listCursorModels,
-  supportsLocalAgentJwt: true,
-  agentConfigurationDoc: cursorAgentConfigurationDoc,
-};
-
 const geminiLocalAdapter: ServerAdapterModule = {
   type: "gemini_local",
   execute: geminiExecute,
@@ -161,6 +162,34 @@ const openCodeLocalAdapter: ServerAdapterModule = {
   agentConfigurationDoc: openCodeAgentConfigurationDoc,
 };
 
+const openRouterLocalAdapter: ServerAdapterModule = {
+  type: "openrouter_local",
+  execute: openRouterExecute,
+  testEnvironment: openRouterTestEnvironment,
+  listSkills: listOpenRouterSkills,
+  syncSkills: syncOpenRouterSkills,
+  sessionCodec: openRouterSessionCodec,
+  models: openRouterModels,
+  sessionManagement: getAdapterSessionManagement("openrouter_local") ?? undefined,
+  listModels: listOpenRouterModels,
+  supportsLocalAgentJwt: true,
+  agentConfigurationDoc: openRouterAgentConfigurationDoc,
+};
+
+const kieLocalAdapter: ServerAdapterModule = {
+  type: "kie_local",
+  execute: kieExecute,
+  testEnvironment: kieTestEnvironment,
+  listSkills: listKieSkills,
+  syncSkills: syncKieSkills,
+  sessionCodec: kieSessionCodec,
+  models: kieModels,
+  sessionManagement: getAdapterSessionManagement("kie_local") ?? undefined,
+  listModels: listKieModels,
+  supportsLocalAgentJwt: true,
+  agentConfigurationDoc: kieAgentConfigurationDoc,
+};
+
 const piLocalAdapter: ServerAdapterModule = {
   type: "pi_local",
   execute: piExecute,
@@ -193,8 +222,9 @@ const adaptersByType = new Map<string, ServerAdapterModule>(
     claudeLocalAdapter,
     codexLocalAdapter,
     openCodeLocalAdapter,
+    openRouterLocalAdapter,
+    kieLocalAdapter,
     piLocalAdapter,
-    cursorLocalAdapter,
     geminiLocalAdapter,
     openclawGatewayAdapter,
     hermesLocalAdapter,

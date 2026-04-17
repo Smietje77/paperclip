@@ -52,6 +52,9 @@ function summarizeProbeDetail(stdout: string, stderr: string, parsedError: strin
 const CODEX_AUTH_REQUIRED_RE =
   /(?:not\s+logged\s+in|login\s+required|authentication\s+required|unauthorized|invalid(?:\s+or\s+missing)?\s+api(?:[_\s-]?key)?|openai[_\s-]?api[_\s-]?key|api[_\s-]?key.*required|please\s+run\s+`?codex\s+login`?)/i;
 
+const CODEX_CHATGPT_PLAN_MISMATCH_RE =
+  /not\s+supported\s+when\s+using\s+codex\s+with\s+a\s+chatgpt\s+account/i;
+
 export async function testEnvironment(
   ctx: AdapterEnvironmentTestContext,
 ): Promise<AdapterEnvironmentTestResult> {
@@ -205,6 +208,14 @@ export async function testEnvironment(
             : {
                 hint: "Try the probe manually (`codex exec --json -` then prompt: Respond with hello) to inspect full output.",
               }),
+        });
+      } else if (CODEX_CHATGPT_PLAN_MISMATCH_RE.test(authEvidence)) {
+        checks.push({
+          code: "codex_chatgpt_plan_model_unsupported",
+          level: "warn",
+          message: "Het gekozen model is niet beschikbaar met je huidige ChatGPT-plan.",
+          ...(detail ? { detail } : {}),
+          hint: "Run in je terminal: `echo \"sk-...\" | codex login --with-api-key` — dat overschrijft de ChatGPT-token in ~/.codex/auth.json met je OpenAI API-key (API-billing). Alternatief: upgrade naar ChatGPT Plus/Team/Enterprise.",
         });
       } else if (CODEX_AUTH_REQUIRED_RE.test(authEvidence)) {
         checks.push({

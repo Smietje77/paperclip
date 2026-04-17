@@ -8,11 +8,13 @@ export const PROVIDER_TO_ADAPTER_TYPES: Record<string, AgentAdapterType[]> = {
   anthropic: ["claude_local"],
   openai: ["codex_local", "opencode_local"],
   google: ["gemini_local"],
-  cursor: ["cursor"],
   gemini: ["gemini_local"],
   openclaw: ["openclaw_gateway"],
   hermes: ["hermes_local"],
   pi: ["pi_local"],
+  openrouter: ["openrouter_local"],
+  kie: ["kie_local"],
+  "kie.ai": ["kie_local"],
 };
 
 export function providerToAdapterTypes(providerId: string | null | undefined): AgentAdapterType[] {

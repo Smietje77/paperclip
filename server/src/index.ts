@@ -1,6 +1,7 @@
 /// <reference path="./types/express.d.ts" />
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
+import { createServer as createNetServer } from "node:net";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
@@ -28,7 +29,7 @@ import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { logger } from "./middleware/logger.js";
 import { setupLiveEventsWebSocketServer } from "./realtime/live-events-ws.js";
-import { heartbeatService, reconcilePersistedRuntimeServicesOnStartup, routineService } from "./services/index.js";
+import { companyAdapterSettingsService, companyService, heartbeatService, reconcilePersistedRuntimeServicesOnStartup, routineService } from "./services/index.js";
 import { createStorageServiceFromConfig } from "./storage/index.js";
 import { printStartupBanner } from "./startup-banner.js";
 import { getBoardClaimWarningUrl, initializeBoardClaimChallenge } from "./board-claim.js";
@@ -322,37 +323,50 @@ export async function startServer(): Promise<StartedServer> {
       }
     };
   
-    const getRunningPid = (): number | null => {
+    const readPidFilePortField = (): number | null => {
       if (!existsSync(postmasterPidFile)) return null;
       try {
-        const pidLine = readFileSync(postmasterPidFile, "utf8").split("\n")[0]?.trim();
-        const pid = Number(pidLine);
-        if (!Number.isInteger(pid) || pid <= 0) return null;
-        if (!isPidRunning(pid)) return null;
-        return pid;
+        const lines = readFileSync(postmasterPidFile, "utf8").split("\n");
+        const p = Number(lines[3]?.trim());
+        return Number.isInteger(p) && p > 0 ? p : null;
       } catch {
         return null;
       }
     };
-  
-    const runningPid = getRunningPid();
+
+    const isPortBound = async (p: number): Promise<boolean> => {
+      return await new Promise((resolve) => {
+        const netServer = createNetServer();
+        netServer.unref();
+        netServer.once("error", (e: NodeJS.ErrnoException) => {
+          resolve(e.code === "EADDRINUSE");
+        });
+        netServer.listen(p, "127.0.0.1", () => {
+          netServer.close();
+          resolve(false);
+        });
+      });
+    };
+
+    // Reliability over reuse: always start a fresh embedded postgres rather
+    // than try to adopt an existing one. The reuse-via-pidfile path was
+    // unreliable on Windows (PID recycling, racy bind/listen, orphaned
+    // postgres.exe processes) and caused frequent ECONNREFUSED loops.
+    if (existsSync(postmasterPidFile)) {
+      logger.warn("Removing existing embedded PostgreSQL pid file before fresh start");
+      rmSync(postmasterPidFile, { force: true });
+    }
+    const runningPid: number | null = null;
+    void readPidFilePortField; // keep helper available if future logic needs it
+    void isPortBound;
     if (runningPid) {
       logger.warn(`Embedded PostgreSQL already running; reusing existing process (pid=${runningPid}, port=${port})`);
     } else {
-      const configuredAdminConnectionString = `postgres://paperclip:paperclip@127.0.0.1:${configuredPort}/postgres`;
-      try {
-        const actualDataDir = await getPostgresDataDirectory(configuredAdminConnectionString);
-        if (
-          typeof actualDataDir !== "string" ||
-          resolve(actualDataDir) !== resolve(dataDir)
-        ) {
-          throw new Error("reachable postgres does not use the expected embedded data directory");
-        }
-        await ensurePostgresDatabase(configuredAdminConnectionString, "paperclip");
-        logger.warn(
-          `Embedded PostgreSQL appears to already be reachable without a pid file; reusing existing server on configured port ${configuredPort}`,
-        );
-      } catch {
+      // Reliability over adoption: always start a fresh embedded postgres.
+      // The "try to connect and adopt" path was unreliable on Windows due to
+      // TCP TIME_WAIT state and ghost listeners that accept connections but
+      // fail on actual queries with shared-memory errors.
+      {
         const detectedPort = await detectPort(configuredPort);
         if (detectedPort !== configuredPort) {
           logger.warn(`Embedded PostgreSQL port is in use; using next free port (requestedPort=${configuredPort}, selectedPort=${detectedPort})`);
@@ -554,6 +568,18 @@ export async function startServer(): Promise<StartedServer> {
     .catch((err) => {
       logger.error({ err }, "startup reconciliation of persisted runtime services failed");
     });
+
+  void (async () => {
+    try {
+      const companies = await companyService(db as any).list();
+      const adapterSettings = companyAdapterSettingsService(db as any);
+      for (const company of companies) {
+        await adapterSettings.seedForCompany(db as any, company.id);
+      }
+    } catch (err) {
+      logger.error({ err }, "startup backfill of company adapter settings failed");
+    }
+  })();
   
   if (config.heartbeatSchedulerEnabled) {
     const heartbeat = heartbeatService(db as any);

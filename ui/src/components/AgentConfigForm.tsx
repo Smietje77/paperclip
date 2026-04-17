@@ -17,7 +17,6 @@ import {
   DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
   DEFAULT_CODEX_LOCAL_MODEL,
 } from "@paperclipai/adapter-codex-local";
-import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
 import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
 import {
   Popover,
@@ -153,12 +152,6 @@ const openCodeThinkingEffortOptions = [
   { id: "high", label: "High" },
   { id: "xhigh", label: "X-High" },
   { id: "max", label: "Max" },
-] as const;
-
-const cursorModeOptions = [
-  { id: "", label: "Auto" },
-  { id: "plan", label: "Plan" },
-  { id: "ask", label: "Ask" },
 ] as const;
 
 const claudeThinkingEffortOptions = [
@@ -389,8 +382,9 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     adapterType === "gemini_local" ||
     adapterType === "hermes_local" ||
     adapterType === "opencode_local" ||
-    adapterType === "pi_local" ||
-    adapterType === "cursor";
+    adapterType === "openrouter_local" ||
+    adapterType === "kie_local" ||
+    adapterType === "pi_local";
   const isHermesLocal = adapterType === "hermes_local";
   const showLegacyWorkingDirectoryField =
     isLocal && shouldShowLegacyWorkingDirectoryField({ isCreate, adapterConfig: config });
@@ -484,19 +478,15 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
   const thinkingEffortKey =
     adapterType === "codex_local"
       ? "modelReasoningEffort"
-      : adapterType === "cursor"
-        ? "mode"
-        : adapterType === "opencode_local"
-          ? "variant"
-          : "effort";
+      : adapterType === "opencode_local"
+        ? "variant"
+        : "effort";
   const thinkingEffortOptions =
     adapterType === "codex_local"
       ? codexThinkingEffortOptions
-      : adapterType === "cursor"
-        ? cursorModeOptions
-        : adapterType === "opencode_local"
-          ? openCodeThinkingEffortOptions
-          : claudeThinkingEffortOptions;
+      : adapterType === "opencode_local"
+        ? openCodeThinkingEffortOptions
+        : claudeThinkingEffortOptions;
   const currentThinkingEffort = isCreate
     ? val!.thinkingEffort
     : adapterType === "codex_local"
@@ -505,8 +495,6 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
           "modelReasoningEffort",
           String(config.modelReasoningEffort ?? config.reasoningEffort ?? ""),
         )
-      : adapterType === "cursor"
-        ? eff("adapterConfig", "mode", String(config.mode ?? ""))
       : adapterType === "opencode_local"
         ? eff("adapterConfig", "variant", String(config.variant ?? ""))
       : eff("adapterConfig", "effort", String(config.effort ?? ""));
@@ -666,8 +654,6 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                         DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX;
                     } else if (t === "gemini_local") {
                       nextValues.model = DEFAULT_GEMINI_LOCAL_MODEL;
-                    } else if (t === "cursor") {
-                      nextValues.model = DEFAULT_CURSOR_LOCAL_MODEL;
                     } else if (t === "opencode_local") {
                       nextValues.model = "";
                     }
@@ -684,8 +670,6 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                             ? DEFAULT_CODEX_LOCAL_MODEL
                             : t === "gemini_local"
                               ? DEFAULT_GEMINI_LOCAL_MODEL
-                            : t === "cursor"
-                              ? DEFAULT_CURSOR_LOCAL_MODEL
                             : "",
                         effort: "",
                         modelReasoningEffort: "",
@@ -801,9 +785,9 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                           ? "hermes"
                         : adapterType === "pi_local"
                           ? "pi"
-                        : adapterType === "cursor"
-                          ? "agent"
-                        : adapterType === "opencode_local"
+                        : adapterType === "opencode_local" ||
+                            adapterType === "openrouter_local" ||
+                            adapterType === "kie_local"
                           ? "opencode"
                           : "claude"
                   }
@@ -820,9 +804,23 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 }
                 open={modelOpen}
                 onOpenChange={setModelOpen}
-                allowDefault={adapterType !== "opencode_local" && adapterType !== "hermes_local"}
-                required={adapterType === "opencode_local" || adapterType === "hermes_local"}
-                groupByProvider={adapterType === "opencode_local"}
+                allowDefault={
+                  adapterType !== "opencode_local" &&
+                  adapterType !== "openrouter_local" &&
+                  adapterType !== "kie_local" &&
+                  adapterType !== "hermes_local"
+                }
+                required={
+                  adapterType === "opencode_local" ||
+                  adapterType === "openrouter_local" ||
+                  adapterType === "kie_local" ||
+                  adapterType === "hermes_local"
+                }
+                groupByProvider={
+                  adapterType === "opencode_local" ||
+                  adapterType === "openrouter_local" ||
+                  adapterType === "kie_local"
+                }
                 creatable={adapterType === "hermes_local"}
                 detectedModel={adapterType === "hermes_local" ? detectedModel : null}
                 onDetectModel={adapterType === "hermes_local"
@@ -1119,7 +1117,16 @@ function AdapterEnvironmentResult({ result }: { result: AdapterEnvironmentTestRe
 
 /* ---- Internal sub-components ---- */
 
-const ENABLED_ADAPTER_TYPES = new Set(["claude_local", "codex_local", "gemini_local", "opencode_local", "pi_local", "cursor", "hermes_local"]);
+const ENABLED_ADAPTER_TYPES = new Set([
+  "claude_local",
+  "codex_local",
+  "gemini_local",
+  "opencode_local",
+  "openrouter_local",
+  "kie_local",
+  "pi_local",
+  "hermes_local",
+]);
 
 /** Display list includes all real adapter types plus UI-only coming-soon entries. */
 const ADAPTER_DISPLAY_LIST: { value: string; label: string; comingSoon: boolean }[] = [

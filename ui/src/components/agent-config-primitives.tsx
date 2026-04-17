@@ -59,11 +59,13 @@ export const help: Record<string, string> = {
 
 export const adapterLabels: Record<string, string> = {
   claude_local: "Claude (local)",
-  codex_local: "Codex (local)",
+  codex_local: "OpenAI (local)",
   gemini_local: "Gemini CLI (local)",
   opencode_local: "OpenCode (local)",
+  openrouter_local: "OpenRouter (local)",
+  kie_local: "Kie.ai (local)",
+  pi_local: "Pi (local)",
   openclaw_gateway: "OpenClaw Gateway",
-  cursor: "Cursor (local)",
   hermes_local: "Hermes Agent",
   process: "Process",
   http: "HTTP",

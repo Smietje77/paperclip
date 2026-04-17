@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
-import { companies, companyAdapterSettings, costEvents } from "@paperclipai/db";
+import { companyAdapterSettings, costEvents } from "@paperclipai/db";
 import {
   AGENT_ADAPTER_TYPES,
   PROVIDER_TO_ADAPTER_TYPES,
@@ -190,13 +190,6 @@ export function companyAdapterSettingsService(db: Db) {
     return found;
   }
 
-  function deriveConfigured(input: {
-    lastTestStatus: string | null;
-    defaultAdapterConfig: Record<string, unknown>;
-  }): boolean {
-    return input.lastTestStatus === "ok";
-  }
-
   async function ensureRow(companyId: string, adapterType: AgentAdapterType): Promise<void> {
     await db
       .insert(companyAdapterSettings)
@@ -258,6 +251,7 @@ export function companyAdapterSettingsService(db: Db) {
 
     let lastTestStatus: "ok" | "error" = "error";
     let lastTestError: string | null = null;
+    let testPassed = false;
     try {
       const { config: runtimeAdapterConfig } = await secrets.resolveAdapterConfigForRuntime(
         companyId,
@@ -268,23 +262,38 @@ export function companyAdapterSettingsService(db: Db) {
         adapterType,
         config: runtimeAdapterConfig,
       });
-      const ok = (result as { ok?: boolean })?.ok;
-      if (ok === false) {
-        lastTestStatus = "error";
-        lastTestError = (result as { error?: string })?.error ?? "Test failed";
-      } else {
+
+      type Check = { level: string; message: string; detail?: string | null; hint?: string | null };
+      const checks = (result as { checks?: Check[] } | null | undefined)?.checks ?? [];
+      const firstError = checks.find((c) => c.level === "error");
+      const firstWarn = checks.find((c) => c.level === "warn");
+      const status = (result as { status?: string } | null | undefined)?.status;
+
+      if (status === "pass") {
         lastTestStatus = "ok";
         lastTestError = null;
+        testPassed = true;
+      } else if (status === "warn") {
+        // Binary/CLI probably present, maar auth of setup niet compleet.
+        lastTestStatus = "error";
+        lastTestError = firstWarn
+          ? `${firstWarn.message}${firstWarn.hint ? ` (${firstWarn.hint})` : ""}`
+          : "Environment test returned warnings";
+      } else if (status === "fail") {
+        lastTestStatus = "error";
+        lastTestError = firstError
+          ? `${firstError.message}${firstError.hint ? ` (${firstError.hint})` : ""}`
+          : "Environment test failed";
+      } else {
+        lastTestStatus = "error";
+        lastTestError = "Adapter returned no status";
       }
     } catch (error) {
       lastTestStatus = "error";
       lastTestError = error instanceof Error ? error.message : String(error);
     }
 
-    const configured = deriveConfigured({
-      lastTestStatus,
-      defaultAdapterConfig: current.defaultAdapterConfig,
-    });
+    const configured = testPassed;
 
     await db
       .update(companyAdapterSettings)

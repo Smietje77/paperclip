@@ -28,8 +28,9 @@ export const AGENT_ADAPTER_TYPES = [
   "codex_local",
   "gemini_local",
   "opencode_local",
+  "openrouter_local",
+  "kie_local",
   "pi_local",
-  "cursor",
   "openclaw_gateway",
   "hermes_local",
 ] as const;

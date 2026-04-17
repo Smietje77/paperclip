@@ -1654,8 +1654,7 @@ function PromptsTab({
     agent.adapterType === "codex_local" ||
     agent.adapterType === "opencode_local" ||
     agent.adapterType === "pi_local" ||
-    agent.adapterType === "hermes_local" ||
-    agent.adapterType === "cursor";
+    agent.adapterType === "hermes_local";
 
   const { data: bundle, isLoading: bundleLoading } = useQuery({
     queryKey: queryKeys.agents.instructionsBundle(agent.id),
