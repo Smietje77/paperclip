@@ -338,7 +338,11 @@ export type {
   PluginWebhookDeliveryRecord,
   QuotaWindow,
   ProviderQuotaResult,
+  CalendarEvent,
+  CalendarEventStatus,
+  CalendarEventType,
 } from "./types/index.js";
+export { CALENDAR_EVENT_TYPES } from "./types/index.js";
 
 export {
   instanceGeneralSettingsSchema,

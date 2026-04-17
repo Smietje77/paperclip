@@ -170,6 +170,12 @@ export type {
 } from "./access.js";
 export type { QuotaWindow, ProviderQuotaResult } from "./quota.js";
 export type {
+  CalendarEvent,
+  CalendarEventStatus,
+  CalendarEventType,
+} from "./calendar.js";
+export { CALENDAR_EVENT_TYPES } from "./calendar.js";
+export type {
   CompanyPortabilityInclude,
   CompanyPortabilityEnvInput,
   CompanyPortabilityFileEntry,

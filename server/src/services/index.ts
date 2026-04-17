@@ -17,6 +17,7 @@ export { companyAdapterSettingsService, registerAdapterSettingsScaffold } from "
 export { scaffoldCompany, registerCompanyScaffoldStep } from "./company-scaffold.js";
 export { mcpServerService } from "./mcp-servers.js";
 export { routineService } from "./routines.js";
+export { calendarService, CALENDAR_MAX_WINDOW_DAYS } from "./calendar.js";
 export { costService } from "./costs.js";
 export { financeService } from "./finance.js";
 export { heartbeatService } from "./heartbeat.js";

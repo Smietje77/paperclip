@@ -23,6 +23,7 @@ import { Approvals } from "./pages/Approvals";
 import { ApprovalDetail } from "./pages/ApprovalDetail";
 import { Costs } from "./pages/Costs";
 import { Activity } from "./pages/Activity";
+import { Calendar } from "./pages/Calendar";
 import { Secrets } from "./pages/Secrets";
 import { McpServers } from "./pages/McpServers";
 import { CompanyBrand } from "./pages/CompanyBrand";
@@ -174,6 +175,7 @@ function boardRoutes() {
       <Route path="approvals/:approvalId" element={<ApprovalDetail />} />
       <Route path="costs" element={<Costs />} />
       <Route path="activity" element={<Activity />} />
+      <Route path="calendar" element={<Calendar />} />
       <Route path="secrets" element={<Secrets />} />
       <Route path="mcp-servers" element={<McpServers />} />
       <Route path="brand" element={<CompanyBrand />} />

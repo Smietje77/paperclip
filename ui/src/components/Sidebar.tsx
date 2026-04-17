@@ -1,5 +1,6 @@
 import {
   Inbox,
+  CalendarDays,
   CircleDot,
   Target,
   LayoutDashboard,
@@ -106,6 +107,7 @@ export function Sidebar() {
           <SidebarNavItem to="/issues" label="Issues" icon={CircleDot} />
           <SidebarNavItem to="/routines" label="Routines" icon={Repeat} textBadge="Beta" textBadgeTone="amber" />
           <SidebarNavItem to="/goals" label="Goals" icon={Target} />
+          <SidebarNavItem to="/calendar" label="Calendar" icon={CalendarDays} />
         </SidebarSection>
 
         <SidebarProjects />
